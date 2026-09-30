@@ -167,6 +167,26 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
   overflow-wrap: anywhere;
 }
 
+.regen {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 8px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+.regen:hover { border-color: var(--ink); }
+.note { margin: 4px 0 0; min-height: 0; font-size: 12px; color: var(--muted); text-align: center; }
+.note:empty { display: none; }
+
+.card.is-loading .art { opacity: .35; }
+.card.is-loading .regen { cursor: progress; opacity: .6; }
+.card.is-new { animation: pop .35s ease-out; }
+@keyframes pop { from { transform: scale(.94); opacity: .4; } }
+
 .placeholder .art { animation: pulse 1.2s ease-in-out infinite; }
 .placeholder:nth-child(4n + 2) .art { animation-delay: .15s; }
 .placeholder:nth-child(4n + 3) .art { animation-delay: .3s; }
@@ -190,4 +210,5 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   .placeholder .art { animation: none; opacity: .6; }
+  .card.is-new { animation: none; }
 }

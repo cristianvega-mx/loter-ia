@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDeck, DeckError, DECK_SIZE } from '../lib/deck.js';
+import { buildDeck, moreCards, DeckError, DECK_SIZE } from '../lib/deck.js';
 
 // Fake Nova: hands out numbered concepts ("Thing 1", "Thing 2", ...) and remembers every request.
 function fakePropose() {
@@ -126,4 +126,26 @@ test('says the topic is too narrow when three rounds are not enough', async () =
     error => error instanceof DeckError && error.code === 'too-narrow',
   );
   assert.equal(calls.length, 3);
+});
+
+test('more cards never repeat a name or pictogram the page has already seen', async () => {
+  const calls = [];
+  const propose = async request => {
+    calls.push(request);
+    return [
+      { name: 'El Sol', search: ['sun'] }, // already a card
+      { name: 'La Estrella', search: ['star'] }, // new name, but the same pictogram as a swapped-out card
+      { name: 'El Cometa', search: ['comet'] },
+      { name: 'El Cohete', search: ['rocket'] },
+    ];
+  };
+  const ids = { sun: 1, star: 2, comet: 3, rocket: 4 };
+  const find = async ([word]) => [{ pictogramId: ids[word], image: `${word}.png`, term: word, about: '' }];
+  const existing = [
+    { name: 'El Sol', pictogramId: 1 },
+    { name: 'El Lucero', pictogramId: 2 },
+  ];
+  const cards = await moreCards({ topic: 'the solar system', language: 'Spanish', existing }, { propose, find });
+  assert.deepEqual(cards.map(card => card.name), ['El Cometa', 'El Cohete']);
+  assert.deepEqual(calls[0].avoid, ['El Sol', 'El Lucero']);
 });

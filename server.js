@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { proposeConcepts, reviewCards } from './lib/nova.js';
 import { findPictograms } from './lib/arasaac.js';
-import { buildDeck, DeckError } from './lib/deck.js';
+import { buildDeck, moreCards, DeckError } from './lib/deck.js';
 
 const PUBLIC = join(import.meta.dirname, 'public');
 const LANGUAGES = ['Spanish', 'English', 'French', 'Portuguese', 'German', 'Italian'];
@@ -26,6 +26,12 @@ const api = {
     const { topic, language } = readDeckRequest(body);
     return buildDeck({ topic, language }, services);
   },
+  // More cards for "Regenerate" once the spares run out. `existing` lists every card the page
+  // has seen for this deck (cards, spares, and swapped-out cards) so none comes back.
+  '/api/more': async body => {
+    const { topic, language } = readDeckRequest(body);
+    return { cards: await moreCards({ topic, language, existing: readExisting(body.existing) }, services) };
+  },
 };
 
 function readDeckRequest(body) {
@@ -34,6 +40,11 @@ function readDeckRequest(body) {
   if (topic.length > MAX_TOPIC) throw new RequestError(`Keep the topic under ${MAX_TOPIC} characters.`);
   if (!LANGUAGES.includes(body?.language)) throw new RequestError('Pick one of the card languages.');
   return { topic, language: body.language };
+}
+
+function readExisting(existing) {
+  if (!Array.isArray(existing) || existing.length > 300) throw new RequestError('The list of cards was not valid.');
+  return existing.map(card => ({ name: String(card?.name ?? '').slice(0, MAX_TOPIC), pictogramId: Number(card?.pictogramId) }));
 }
 
 async function handleApi(req, res, handler) {

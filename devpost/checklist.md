@@ -19,7 +19,7 @@ Build mode: fast
   Learner check: Open http://localhost:3000, type "the solar system", pick Spanish, press "Create my Lotería", and say whether the cards look like the Lotería you pictured.
   Commit: `Create a 24-card Lotería from a topic`
 
-- [ ] **2. Swap a card you don't like**
+- [x] **2. Swap a card you don't like**
   Becomes usable: Every card has a "Regenerate" button. It replaces only that card with a different concept from the same topic: instantly from the spares, or by asking the server for more once the spares run out.
   Why now: It answers the kernel's main risk, a wrong or unwanted card, and builds directly on the deck from slice 1.
   PRD ref: `prd.md > Regenerating a Card`
@@ -65,7 +65,8 @@ Build mode: fast
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 1 (the deck): the look and the pictures, while printing and calling can still adapt
+- [x] Early usable behavior explored — after slice 1 (the deck): the look and the pictures, while printing and calling can still adapt
+  Feedback: Cristian tried "animals" in English and liked the result ("me parece muy bien"). He noticed the boards were still missing (planned in slice 3). His first try showed "Failed to fetch" because the local server had been stopped; the unclear message is covered in slice 5.
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
