@@ -15,19 +15,19 @@ Source: `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 2. They ask it to create the Lotería. While it works, the screen shows that the Lotería is being made.
 3. The deck appears: 24 cards, each with a drawing and its name in the chosen language.
 4. If a card came out wrong or the teacher doesn't like it, they press that card's "regenerate" button, and it is replaced by a different card from the same topic.
-5. The teacher enters how many boards the class needs. Loter-IA makes that many boards of 4 × 3 (12 squares), all different, ready to print.
-6. The teacher prints the boards and hands them out. Students mark their boards by hand.
-7. The teacher calls the cards either from the printed deck (Loter-IA prints the 24 cards too) or on screen, one card at a time: swipe up for the next card, swipe down to go back to the previous one. They shout each card's name; students look for the card with that drawing and name on their board.
+5. The teacher enters how many boards the class needs. Loter-IA makes that many boards of 4 × 3 (12 squares), all different, and downloads them as one PDF file.
+6. The teacher prints the PDF (at home, at school, or at a print shop) and hands the boards out. Students mark their boards by hand.
+7. The teacher calls the cards either from the printed deck (Loter-IA makes a PDF of the 24 cards too) or on screen, one card at a time: swipe up for the next card, swipe down to go back to the previous one. They shout each card's name; students look for the card with that drawing and name on their board.
 
 Success: a complete, illustrated Lotería on the topic the teacher typed, played on paper in class.
 
 ## Screens and Layout
-The journey uses three parts of the app, plus what comes out of the printer. Whether Start and Deck are one page or two is not decided; `4-spec` picks the simplest.
+The journey uses three parts of the app, plus the PDF files it downloads. Whether Start and Deck are one page or two is not decided; `4-spec` picks the simplest.
 
 - **Start** — type the topic, pick the card language, create the Lotería.
-- **Deck** — the 24 cards, each with its "regenerate" button; where the teacher enters the number of boards; the ways to print the boards, print the cards, and start calling cards on screen.
+- **Deck** — the 24 cards, each with its "regenerate" button; where the teacher enters the number of boards; the ways to download the boards, download the cards, and start calling cards on screen.
 - **Caller** — one card at a time, with its drawing and name; swipe up for the next card, swipe down for the previous one.
-- **Printed pages** — the boards (4 × 3 each) and the 24 cards to cut out.
+- **PDF files** — one with all the boards (4 × 3 each, one per page) and one with the 24 cards to cut out.
 
 ## Look and Feel
 Source: `scope.md > Inspiration & Identity`.
@@ -65,12 +65,12 @@ Source: `scope.md > The Core Loop`.
 - [ ] The teacher enters how many boards they need and gets exactly that many.
 - [ ] Each board is 4 × 3: 12 squares, each showing the drawing and name of a different card from the deck.
 - [ ] No two boards are the same. (Assumption: inherent to Lotería.)
-- [ ] Printing the boards prints only the boards, with no buttons or menus.
+- [ ] The boards download as one PDF file with one board per page, ready to print, send, or take to a print shop. *(Changed in the build, at Cristian's request: a download instead of the browser's print window.)*
 
 ### Printing the Cards
 Source: `scope.md > The POC Boundary`.
 
-- [ ] The teacher can print the 24 cards, laid out to be cut out and called by hand.
+- [ ] The teacher can download the 24 cards as one PDF, laid out to be cut out and called by hand.
 
 ### Calling the Cards on Screen
 Source: `scope.md > The Core Loop`.
@@ -99,14 +99,15 @@ Source: `scope.md > The Core Loop`.
 - **Name: Loter-IA** — "Lotería" + "IA" (AI in Spanish).
 - **Demo topic: the solar system** — from scope: math drawings would have to be exact.
 - **Classic card look** — the drawing plus its name, from his photo (scope).
+- **Boards and cards as PDF downloads** (decided in the build) — "que al crear las tablas se las dé dentro de un archivo PDF para descargar": one file with all the boards, easy to save, send, or take to a print shop.
 - **Pictograms instead of AI drawings** (decided in `4-spec`) — no spending beyond his AWS credit. Only concepts that have a pictogram can become cards.
 
 ## What We're Building
 
 1. Start: topic and card language, then create.
 2. A 24-card deck with drawings and names, and a "regenerate" button on each card.
-3. Boards: choose how many; 4 × 3, all different; print.
-4. Printing the 24 cards.
+3. Boards: choose how many; 4 × 3, all different; download as one PDF.
+4. The 24 cards as a PDF to cut out.
 5. The on-screen caller: vertical swipe, shuffled order, end-of-deck message.
 6. An English interface, with card names in the chosen language.
 

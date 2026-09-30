@@ -8,8 +8,8 @@ status: approved
 ## How This Works, In Plain Language
 Loter-IA has three parts:
 
-1. **The page** — what the teacher sees in the browser: the start (topic and language), the deck of 24 cards, the boards, and the caller. Printing uses the browser's own Print button, so boards and cards come out on paper or as a PDF.
-2. **The server** — a small program that runs on a computer: Cristian's PC while we build, and his VPS for the public link. It keeps the Amazon key private, asks Amazon's text AI for the concepts, and finds a pictogram for each one.
+1. **The page** — what the teacher sees in the browser: the start (topic and language), the deck of 24 cards, the download buttons, and the caller.
+2. **The server** — a small program that runs on a computer: Cristian's PC while we build, and his VPS for the public link. It keeps the Amazon key private, asks Amazon's text AI for the concepts, finds a pictogram for each one, and makes the PDF files with the boards and the cards.
 3. **Two outside services:**
    - **Amazon Nova**, a text AI. It chooses the concepts and writes their names in the teacher's language. It's paid from Cristian's AWS credit, at less than a cent per Lotería.
    - **ARASAAC**, a free library of 11,000+ pictograms drawn for special education. It needs no key and no account.
@@ -35,13 +35,14 @@ PRD ref: `prd.md > The Core Journey`.
 5. **Assembling the deck.** The first 24 reviewed cards with distinct names and pictograms become the deck and the rest become spares. If fewer than 24 are ready, the server asks Nova again, excluding the ideas it already tried, up to three rounds in total. If there are still fewer than 24, it answers with the "topic too narrow" error.
 6. **Showing the deck.** The page shows 24 cards. Each card's image loads straight from ARASAAC (`static.arasaac.org`), with the name printed in a band below it.
 7. **Regenerating a card.** The page swaps that card for the next spare instantly. When the spares run out, it asks `POST /api/more {topic, language, exclude}` for more.
-8. **Boards.** The teacher enters how many boards, from 1 to 60. `boards.js` builds that many boards of 12 different cards each, and no two boards share the same set of cards. Printing shows one board per landscape page.
-9. **Printed cards.** "Print cards" lays out all 24 cards, 8 per landscape page, with light cut lines.
+8. **Boards.** The teacher enters how many boards, from 1 to 60, and presses "Download boards (PDF)". The page sends the deck to `POST /api/boards.pdf`; `lib/boards.js` builds that many boards of 12 different cards each, no two with the same set of cards, and `lib/pdf.js` draws one board per landscape letter page. The browser saves the file. *(Changed in the build, at Cristian's request: a PDF download instead of the print window.)*
+9. **Cards to cut out.** "Download cards (PDF)" sends the deck to `POST /api/cards.pdf`, which lays out all 24 cards, 8 per landscape page, with dashed cut lines.
 10. **The caller.** "Call cards" shuffles the 24 cards and opens a full-screen vertical feed with one card at a time. Swiping or scrolling moves to the next or previous card, and the arrow keys do the same. After the 24th card, an end card says that all the cards have been called.
 
 ## Stack
 - **Node.js 24** (Cristian's PC has v24.19.0). It covers built-in `fetch`, `--env-file` for settings, and `node --test` for tests. Docs: https://nodejs.org/docs/latest-v24.x/api/
-- **Plain JavaScript (ES modules), HTML, and CSS.** There is no framework, no build step, and no npm dependencies. Rationale: less to install and nothing to compile, and the code stays readable for a beginner.
+- **Plain JavaScript (ES modules), HTML, and CSS.** There is no framework and no build step. Rationale: less to install and nothing to compile, and the code stays readable for a beginner.
+- **PDFKit 0.20** (`pdfkit`), the only npm dependency, draws the PDFs on the server. Added in the build with Cristian's agreement. Docs: https://pdfkit.org/
 - **Amazon Bedrock Converse API** with a Bedrock API key sent as a bearer token.
   - **Model:** `us.amazon.nova-2-lite-v1:0` (Nova 2 Lite, set with `NOVA_MODEL_ID`). The plan started with Nova Pro, Puente's model, but the build's coverage check showed Nova 2 Lite stays on topic far better; see checklist Revisions.
   - **Docs:** Converse (https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html), API keys (https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html), tool use (https://docs.aws.amazon.com/nova/latest/userguide/tool-use.html).
@@ -72,15 +73,15 @@ Carried from `prd.md > Look and Feel` and `scope.md > Inspiration & Identity`.
   - A white card with a thin border and a colored picture area (4:5), with the pictogram centered at about 80% of its width.
   - The name is in uppercase with its natural article ("EL SOL", "SATURNO") in a white band below.
   - Pictograms that bring their own background (planets on black) are shown as they are.
-- **Interface copy:** English, short and friendly. For example: "Create my Lotería", "Regenerate", "How many boards?", "Print boards", "Print cards", "Call cards".
+- **Interface copy:** English, short and friendly. For example: "Create my Lotería", "Regenerate", "How many boards?", "Download boards (PDF)", "Download cards (PDF)", "Call cards".
 - **Density:** spacious, with large buttons for a tablet or phone.
-- **Print:** print styles hide buttons and menus. Boards print one per landscape page with a small header ("Loter-IA · the solar system · Board 3"); cards print 8 per landscape page.
-- **Credit line (required by ARASAAC's license):** "Pictograms: Sergio Palao. Origin: ARASAAC (https://arasaac.org). License: CC BY-NC-SA. Owner: Government of Aragón (Spain)." It appears on screen and on printed pages, in small type.
+- **PDFs:** letter paper, landscape. Boards go one per page with a small header ("Loter-IA · the solar system · Board 3 of 30"); cards go 8 per page with dashed cut lines. Names use Helvetica Bold, PDFKit's built-in font, in uppercase; each card keeps the color it has on screen.
+- **Credit line (required by ARASAAC's license):** "Pictograms: Sergio Palao. Origin: ARASAAC (https://arasaac.org). License: CC BY-NC-SA. Owner: Government of Aragón (Spain)." It appears on screen and on every PDF page, in small type.
 
 ## Components
 
 ### Server
-`server.js`. It serves `public/`, answers `POST /api/deck` and `POST /api/more`, checks the daily limit, and reads its settings from the environment. It returns JSON errors with a plain message for the page to show.
+`server.js`. It serves `public/`, answers `POST /api/deck`, `POST /api/more`, `POST /api/boards.pdf`, and `POST /api/cards.pdf`, checks the daily limit, and reads its settings from the environment. It returns JSON errors with a plain message for the page to show.
 PRD ref: `prd.md > Creating the Lotería`, `prd.md > Regenerating a Card`, `prd.md > States and Boundaries`.
 
 ### Concept Picker
@@ -123,14 +124,14 @@ PRD ref: `prd.md > States and Boundaries`.
 PRD ref: `prd.md > Screens and Layout`, `prd.md > The Core Journey`.
 
 ### Boards
-`public/boards.js`. It has pure functions:
+`lib/boards.js`. It has pure functions:
 - `shuffle` (Fisher–Yates);
 - `makeBoards(cards, count)`, which builds boards of 12 cards and redraws any board whose set of cards was already used.
 
 PRD ref: `prd.md > Boards`.
 
-### Print Layouts
-The `@media print` rules in `public/styles.css`, plus two print containers the page fills before calling `window.print()`: `#print-boards` and `#print-cards`.
+### PDF Maker
+`lib/pdf.js`, with PDFKit. `boardsPdf({topic, cards, count})` builds the boards and draws one per page; `cardsPdf({topic, cards})` draws the 24 cards, 8 per page. It fetches each pictogram from ARASAAC once (keeping the last few hundred in memory) and embeds each picture in the file once, so 30 boards stay around half a megabyte. A picture that can't be fetched leaves its card with just the color and name.
 PRD ref: `prd.md > Boards`, `prd.md > Printing the Cards`.
 
 ### Caller
@@ -149,7 +150,7 @@ All shapes are plain JavaScript objects.
 | Data | Where it lives | How it changes | When the teacher leaves and comes back |
 |---|---|---|---|
 | Deck and spares | Page memory | Created by "Create my Lotería"; a card is swapped by "Regenerate" | Gone; they make a new Lotería (PRD: nothing is saved) |
-| Boards | Page memory | Rebuilt each time the teacher asks for boards | Gone |
+| Boards | Nowhere: the server builds them for each PDF download | New boards with every download | The downloaded PDF stays with the teacher |
 | Caller order and position | Page memory | Shuffled when the caller opens; position moves with each swipe | Gone |
 | Daily counters | Server memory | +1 per deck or "more" request | Survive until the day changes or the server restarts |
 | Amazon key | `.env` (local) or container environment (VPS) | Set once by hand | Stays; never sent to the page |
@@ -158,19 +159,21 @@ All shapes are plain JavaScript objects.
 
 ```
 loteria-bilingue/            # project folder (the public repo can be named loter-ia)
-├── server.js                # small web server: serves public/, answers /api/deck and /api/more
+├── server.js                # small web server: serves public/, answers /api/deck, /api/more, and the two PDF routes
 ├── lib/
 │   ├── nova.js              # asks Amazon Nova for concepts (Converse API, forced tool)
 │   ├── arasaac.js           # finds a pictogram for an English search word
 │   ├── deck.js              # candidates → 24 cards + spares, retry once, "topic too narrow"
+│   ├── boards.js            # shuffle and makeBoards (pure functions)
+│   ├── pdf.js               # boards and cards as PDF files (PDFKit)
 │   └── limit.js             # daily counters for the public link
 ├── public/
-│   ├── index.html           # the app: Start, Deck, and Caller views + print containers
-│   ├── app.js               # page logic: create, regenerate, boards, printing, caller
-│   ├── boards.js            # shuffle and makeBoards (pure functions, shared with tests)
-│   └── styles.css           # Lotería look, caller feed, print layouts
+│   ├── index.html           # the app: Start, Deck, and Caller views
+│   ├── app.js               # page logic: create, regenerate, PDF downloads, caller
+│   └── styles.css           # Lotería look and caller feed
 ├── test/
 │   ├── boards.test.js       # 12 different cards per board, no two boards alike, shuffle
+│   ├── pdf.test.js          # page counts, pictures embedded once, missing picture
 │   ├── deck.test.js         # deck assembly with fake Nova and ARASAAC answers
 │   └── arasaac.test.js      # exact search first, keyword match, picture options, retry (fake fetch)
 ├── scripts/
@@ -178,6 +181,7 @@ loteria-bilingue/            # project folder (the public repo can be named lote
 ├── Dockerfile               # node:24-alpine image for the public link
 ├── .env.example             # AWS_BEARER_TOKEN_BEDROCK=, AWS_REGION=us-east-1, NOVA_MODEL_ID=, DAILY_DECKS=, DAILY_MORE=
 ├── .gitignore               # already ignores .env, learner profile, Spanish review pages
+├── package-lock.json        # exact versions of PDFKit and what it needs
 ├── package.json             # "start": "node --env-file-if-exists=.env server.js", "test": "node --test"
 ├── LICENSE                  # MIT (code only; pictograms keep ARASAAC's license)
 ├── README.md                # what it is, how to run, public link, video, ARASAAC credit
@@ -220,7 +224,7 @@ loteria-bilingue/            # project folder (the public repo can be named lote
 - **Broad search:** `GET https://api.arasaac.org/v1/pictograms/en/search/{word}` returns the same shape.
 - **Image:** `https://static.arasaac.org/pictograms/{id}/{id}_500.png` (PNG, 500 px). The page loads it directly.
 - **Access:** no key and free.
-- **License:** CC BY-NC-SA 4.0, which allows non-commercial use with credit. The credit line appears on screen, in prints, and in the README.
+- **License:** CC BY-NC-SA 4.0, which allows non-commercial use with credit. The credit line appears on screen, in the PDFs, and in the README.
 - **Checked 2026-09-30:**
   - The API answers in English, Spanish, and Arabic.
   - "comet" finds the comet (2711) and "kite" the kite (2350).
@@ -244,22 +248,23 @@ Cristian's fallback, decided at review. It is not built unless the coverage chec
 
 ## What Was Simplified and Why
 - **Pictograms instead of AI-generated drawings** (Cristian's decision). This keeps the cost at zero and the drawings correct. The fuller version, drawings of anything, would need a paid image model (Stability, about $1 per Lotería) or a separate free account (Cloudflare Workers AI).
-- **Browser printing instead of generating PDFs.** Print to paper, or use "Save as PDF", with no PDF library.
+- **A small PDF library instead of a headless browser.** PDFKit draws the pages directly; the fuller route, rendering the web page to PDF on the server, would need a browser inside the container.
 - **Nothing saved** (PRD). There is no database, no accounts, and no files written.
 - **An in-memory daily counter instead of per-person quotas.** It's enough to protect the credit on the public link without sign-in.
-- **No framework and no dependencies.** It's one small Node server and one page.
+- **No framework and one dependency.** It's one small Node server, one page, and PDFKit.
 
 ## Decisions and Open Issues
 
 **Cristian's decisions in this step:**
 - **Free pictograms (ARASAAC) instead of paid AI drawings** — "no me gustaría gastar más de lo que tengo de crédito". Tradeoff accepted: only concepts that have a pictogram can become cards, and some pictograms bring their own background.
+- **Boards and cards as PDF downloads** (in the build) — he asked for one file with all the boards instead of the browser's print window, so it can be saved, sent, or taken to a print shop. Tradeoff accepted: one npm dependency (PDFKit).
 - **Video plus a public link** — after learning the link is optional, he chose it so judges can try Loter-IA themselves, with a daily limit to protect the credit.
 - **Plan B for drawings** — "si ves que no alcanza con los dibujos de ARASAAC cambiemos a la IA de Cloudflare". The first build step checks pictogram coverage with "the solar system" and five common school topics. If the demo topic can't reach 24 good pictograms, or most of the other topics can't, the build switches to Cloudflare Workers AI drawings (see *Plan B*).
 
 **Agent recommendations** (explained in plain language, accepted at review): the three-part shape (page, server, Nova) and Nova as the text AI (Nova Pro in the plan; Nova 2 Lite after the build's coverage check).
 
 **Implementation details derived by the agent:**
-- Node 24 plain JavaScript with zero dependencies.
+- Node 24 plain JavaScript; PDFKit is the only dependency.
 - About 36 candidates per deck, English searches with the exact match first, and the violence and sex filters.
 - A 1–60 range for boards.
 - One board per landscape page and 8 cards per landscape page.
@@ -269,7 +274,7 @@ Cristian's fallback, decided at review. It is not built unless the coverage chec
 **One useful unknown** (from Cristian): in `2-scope` he asked why the pictures wouldn't have letters when classic Lotería cards show the name. It was clarified then: the app prints each name itself, and the drawing (now a pictogram) carries no text. That way names are always spelled right and come out in the chosen language. The build checks it by creating decks in two languages: the pictures carry no letters, and the name bands appear in each chosen language.
 
 **Open issues:**
-- **Board orientation:** "4 × 3" is read as 4 columns by 3 rows on a landscape page. Confirm when Cristian sees the first printed board; it's quick to flip.
+- **Board orientation:** "4 × 3" is read as 4 columns by 3 rows on a landscape page. Cristian saw this layout in the build and asked for no change.
 - **Card languages:** Spanish, English, French, Portuguese, German, and Italian, still the PRD's assumption.
 - **Public link:** the subdomain is chosen at deploy time.
 - **Verify first in the build:**

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { makeBoards, shuffle, BOARD_SIZE, MAX_BOARDS } from '../public/boards.js';
+import { makeBoards, shuffle, BOARD_SIZE, MAX_BOARDS } from '../lib/boards.js';
 
 const deck = Array.from({ length: 24 }, (_, i) => ({ name: `Card ${i}`, pictogramId: 1000 + i }));
 const setOf = board => board.cards.map(card => card.pictogramId).sort((a, b) => a - b).join(',');

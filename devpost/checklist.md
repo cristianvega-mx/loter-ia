@@ -92,3 +92,4 @@ Activity mode: [live app and editor, explicit static fallback, focused alternati
 - Pictograms must carry the search term as a keyword, and the deck builder asks for up to three rounds of ideas — single-word searches matched a fairy-tale dwarf for "dwarf planet", and two rounds were not always enough for "the solar system".
 - ARASAAC lookups retry once, and a single failed lookup only loses that concept — a dropped connection failed a whole test run.
 - Added `scripts/coverage.js` (`npm run coverage`) as the Plan B check — all six school topics reached 24 cards, so Plan B (Cloudflare drawings) is not needed.
+- Boards and cards now download as PDFs made on the server with PDFKit, instead of opening the browser's print window — Cristian asked for one file with all the boards, which is easier to save, send, and take to a print shop. `public/boards.js` moved to `lib/boards.js`, and the print styles were removed.

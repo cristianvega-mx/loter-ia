@@ -51,9 +51,9 @@
         <form id="boards-form" class="boards-form" novalidate>
           <label for="board-count">How many boards?</label>
           <input id="board-count" type="number" min="1" max="60" value="30" inputmode="numeric">
-          <button type="submit" class="primary">Print boards</button>
+          <button id="download-boards" type="submit" class="primary">Download boards (PDF)</button>
         </form>
-        <button id="print-cards" type="button" class="secondary">Print cards</button>
+        <button id="download-cards" type="button" class="secondary">Download cards (PDF)</button>
       </div>
     </div>
     <p id="deck-status" class="status" role="status" aria-live="polite"></p>
@@ -64,9 +64,6 @@
 <footer class="credit">
   Pictograms: Sergio Palao. Origin: <a href="https://arasaac.org" target="_blank" rel="noopener">ARASAAC</a>. License: CC (BY-NC-SA). Owner: Government of Aragón (Spain).
 </footer>
-
-<!-- Filled just before printing: boards or cards, one printed page per .print-page. -->
-<div id="print-area"></div>
 
 <script type="module" src="app.js"></script>
 </body>

@@ -12,5 +12,8 @@
     "start": "node --env-file-if-exists=.env server.js",
     "test": "node --test \"test/**/*.test.js\"",
     "coverage": "node --env-file-if-exists=.env scripts/coverage.js"
+  },
+  "dependencies": {
+    "pdfkit": "^0.20.2"
   }
 }

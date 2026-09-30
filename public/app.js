@@ -1,12 +1,10 @@
 // Loter-IA page: asks the server for a deck, shows the cards, swaps cards on "Regenerate",
-// and prints boards and cards. Everything lives in this page while it's open; nothing is saved.
-
-import { makeBoards, MAX_BOARDS } from './boards.js';
+// and downloads the boards and the cards as PDFs. Everything lives in this page while it's open;
+// nothing is saved.
 
 const COLORS = ['#F5C842', '#7FB3E6', '#E88AA6', '#8FCF9F'];
 const DECK_SIZE = 24;
-const CARDS_PER_PAGE = 8;
-const CREDIT = 'Pictograms: Sergio Palao. Origin: ARASAAC (arasaac.org). License: CC (BY-NC-SA). Owner: Government of Aragón (Spain).';
+const MAX_BOARDS = 60;
 // deck: { topic, language, cards, spares } from the server; removed: cards the teacher swapped out,
 // so "Regenerate" never brings them back.
 const state = { deck: null, removed: [] };
@@ -25,7 +23,6 @@ $('start-form').addEventListener('submit', async event => {
   setBusy(true);
   showStatus('Creating your Lotería…');
   showDeckStatus('');
-  document.body.classList.remove('has-print');
   showPlaceholders(topic);
   try {
     state.deck = await post('/api/deck', { topic, language });
@@ -44,6 +41,22 @@ $('start-form').addEventListener('submit', async event => {
 $('cards').addEventListener('click', event => {
   const button = event.target.closest('.regen');
   if (button) regenerate(Number(button.closest('.card').dataset.index));
+});
+
+$('boards-form').addEventListener('submit', event => {
+  event.preventDefault();
+  if (!state.deck) return;
+  const count = Number($('board-count').value);
+  if (!Number.isInteger(count) || count < 1 || count > MAX_BOARDS) {
+    showDeckStatus(`Choose between 1 and ${MAX_BOARDS} boards.`, true);
+    $('board-count').focus();
+    return;
+  }
+  download('/api/boards.pdf', { ...printable(), count }, $('download-boards'), 'Making your boards…');
+});
+
+$('download-cards').addEventListener('click', () => {
+  if (state.deck) download('/api/cards.pdf', printable(), $('download-cards'), 'Making your cards…');
 });
 
 async function regenerate(index) {
@@ -74,97 +87,40 @@ async function regenerate(index) {
   }
 }
 
-$('boards-form').addEventListener('submit', async event => {
-  event.preventDefault();
-  if (!state.deck) return;
-  const count = Number($('board-count').value);
-  if (!Number.isInteger(count) || count < 1 || count > MAX_BOARDS) {
-    showDeckStatus(`Choose between 1 and ${MAX_BOARDS} boards.`, true);
-    $('board-count').focus();
-    return;
-  }
+// What the server needs to draw the PDFs: the topic and the deck in order (a card's color follows its place).
+function printable() {
+  const { topic, cards } = state.deck;
+  return { topic, cards: cards.map(({ name, pictogramId }) => ({ name, pictogramId })) };
+}
+
+// Asks the server for a PDF and hands it to the browser as a download.
+async function download(url, body, button, busyLabel) {
+  const label = button.textContent;
+  button.disabled = true;
+  button.textContent = busyLabel;
   showDeckStatus('');
-  const boards = makeBoards(state.deck.cards, count);
-  await printPages(boards.map(board => boardPage(board, boards.length)));
-});
-
-$('print-cards').addEventListener('click', async () => {
-  if (!state.deck) return;
-  const pages = [];
-  for (let start = 0; start < state.deck.cards.length; start += CARDS_PER_PAGE) {
-    pages.push(cardsPage(state.deck.cards.slice(start, start + CARDS_PER_PAGE)));
+  try {
+    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!response.ok) {
+      const answer = await response.json().catch(() => ({}));
+      throw new Error(answer.message || "Couldn't make the PDF. Try again.");
+    }
+    const file = await response.blob();
+    const name = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1] ?? 'loter-ia.pdf';
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(file);
+    link.download = name;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 60_000);
+    showDeckStatus(`Downloaded ${name}`);
+  } catch (error) {
+    showDeckStatus(error.message, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = label;
   }
-  await printPages(pages);
-});
-
-// Puts the pages in the print area (the only thing print styles show), waits for every picture,
-// then opens the browser's print dialog, where the teacher can print or "Save as PDF".
-async function printPages(pages) {
-  $('print-area').replaceChildren(...pages);
-  document.body.classList.add('has-print');
-  await Promise.all([...$('print-area').querySelectorAll('img')].map(image => image.decode().catch(() => {})));
-  window.print();
-}
-
-function boardPage(board, total) {
-  const page = printPage(`Board ${board.number} of ${total}`);
-  const grid = document.createElement('div');
-  grid.className = 'board-grid';
-  grid.append(...board.cards.map(printCard));
-  page.querySelector('.print-body').append(grid);
-  return page;
-}
-
-function cardsPage(cards) {
-  const page = printPage('Cards');
-  const grid = document.createElement('div');
-  grid.className = 'cut-grid';
-  grid.append(...cards.map(printCard));
-  page.querySelector('.print-body').append(grid);
-  return page;
-}
-
-function printPage(label) {
-  const page = document.createElement('section');
-  page.className = 'print-page';
-  const head = document.createElement('header');
-  head.className = 'print-head';
-  for (const [className, text] of [['print-brand', 'Loter-IA'], ['print-topic', state.deck.topic], ['print-label', label]]) {
-    const span = document.createElement('span');
-    span.className = className;
-    span.textContent = text;
-    head.append(span);
-  }
-  const body = document.createElement('div');
-  body.className = 'print-body';
-  const credit = document.createElement('p');
-  credit.className = 'print-credit';
-  credit.textContent = CREDIT;
-  page.append(head, body, credit);
-  return page;
-}
-
-// A card keeps the same color everywhere (deck, boards, printed cards), so it's easy to spot.
-function printCard(card) {
-  const box = document.createElement('div');
-  box.className = 'print-card';
-  box.style.setProperty('--card-color', COLORS[Math.max(0, state.deck.cards.indexOf(card)) % COLORS.length]);
-  const art = document.createElement('div');
-  art.className = 'art';
-  const image = document.createElement('img');
-  image.src = card.image;
-  image.alt = '';
-  art.append(image);
-  const name = document.createElement('p');
-  name.className = 'name';
-  name.textContent = card.name;
-  box.append(art, name);
-  return box;
-}
-
-function showDeckStatus(message, isError = false) {
-  $('deck-status').textContent = message;
-  $('deck-status').classList.toggle('error', isError);
 }
 
 function renderDeck() {
@@ -237,4 +193,9 @@ function setBusy(busy) {
 function showStatus(message, isError = false) {
   $('status').textContent = message;
   $('status').classList.toggle('error', isError);
+}
+
+function showDeckStatus(message, isError = false) {
+  $('deck-status').textContent = message;
+  $('deck-status').classList.toggle('error', isError);
 }

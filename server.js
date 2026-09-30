@@ -1,4 +1,4 @@
-// Loter-IA web server: serves the page in public/ and creates decks.
+// Loter-IA web server: serves the page in public/, creates decks, and makes the PDF downloads.
 // The Amazon key stays here; the page only ever sees cards.
 
 import { createServer } from 'node:http';
@@ -7,6 +7,8 @@ import { extname, join, normalize, sep } from 'node:path';
 import { proposeConcepts, reviewCards } from './lib/nova.js';
 import { findPictograms } from './lib/arasaac.js';
 import { buildDeck, moreCards, DeckError } from './lib/deck.js';
+import { boardsPdf, cardsPdf } from './lib/pdf.js';
+import { BOARD_SIZE, MAX_BOARDS } from './lib/boards.js';
 
 const PUBLIC = join(import.meta.dirname, 'public');
 const LANGUAGES = ['Spanish', 'English', 'French', 'Portuguese', 'German', 'Italian'];
@@ -21,25 +23,47 @@ const services = { propose: proposeConcepts, find: findPictograms, review: revie
 
 class RequestError extends Error {}
 
+// Each route: what it does with the request body, and what the teacher reads if it fails.
 const api = {
-  '/api/deck': async body => {
-    const { topic, language } = readDeckRequest(body);
-    return buildDeck({ topic, language }, services);
+  '/api/deck': {
+    failure: 'Something went wrong while creating your Lotería.',
+    run: async body => buildDeck(readDeckRequest(body), services),
   },
   // More cards for "Regenerate" once the spares run out. `existing` lists every card the page
   // has seen for this deck (cards, spares, and swapped-out cards) so none comes back.
-  '/api/more': async body => {
-    const { topic, language } = readDeckRequest(body);
-    return { cards: await moreCards({ topic, language, existing: readExisting(body.existing) }, services) };
+  '/api/more': {
+    failure: "Couldn't get a new card. Try again.",
+    run: async body => ({ cards: await moreCards({ ...readDeckRequest(body), existing: readExisting(body.existing) }, services) }),
+  },
+  '/api/boards.pdf': {
+    failure: "Couldn't make the PDF. Try again.",
+    run: async body => {
+      const { topic, cards } = readPrintRequest(body);
+      const count = Number(body.count);
+      if (!Number.isInteger(count) || count < 1 || count > MAX_BOARDS) throw new RequestError(`Choose between 1 and ${MAX_BOARDS} boards.`);
+      return { file: await boardsPdf({ topic, cards, count }), name: `loter-ia-boards-${slug(topic)}.pdf` };
+    },
+  },
+  '/api/cards.pdf': {
+    failure: "Couldn't make the PDF. Try again.",
+    run: async body => {
+      const { topic, cards } = readPrintRequest(body);
+      return { file: await cardsPdf({ topic, cards }), name: `loter-ia-cards-${slug(topic)}.pdf` };
+    },
   },
 };
 
 function readDeckRequest(body) {
+  const topic = readTopic(body);
+  if (!LANGUAGES.includes(body?.language)) throw new RequestError('Pick one of the card languages.');
+  return { topic, language: body.language };
+}
+
+function readTopic(body) {
   const topic = typeof body?.topic === 'string' ? body.topic.trim() : '';
   if (!topic) throw new RequestError('Type a topic first.');
   if (topic.length > MAX_TOPIC) throw new RequestError(`Keep the topic under ${MAX_TOPIC} characters.`);
-  if (!LANGUAGES.includes(body?.language)) throw new RequestError('Pick one of the card languages.');
-  return { topic, language: body.language };
+  return topic;
 }
 
 function readExisting(existing) {
@@ -47,30 +71,50 @@ function readExisting(existing) {
   return existing.map(card => ({ name: String(card?.name ?? '').slice(0, MAX_TOPIC), pictogramId: Number(card?.pictogramId) }));
 }
 
-async function handleApi(req, res, handler) {
-  let status = 200;
-  let payload;
+function readPrintRequest(body) {
+  const topic = readTopic(body);
+  const cards = body?.cards;
+  const valid = card => typeof card?.name === 'string' && card.name.trim() && card.name.length <= MAX_TOPIC && Number.isInteger(card.pictogramId) && card.pictogramId > 0;
+  if (!Array.isArray(cards) || cards.length < BOARD_SIZE || cards.length > 60 || !cards.every(valid)) {
+    throw new RequestError('The deck was not valid. Create your Lotería again.');
+  }
+  return { topic, cards: cards.map(card => ({ name: card.name.trim(), pictogramId: card.pictogramId })) };
+}
+
+const slug = text => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'loteria';
+
+async function handleApi(req, res, route) {
   try {
     const body = JSON.parse((await readBody(req)) || '{}');
-    payload = await handler(body);
+    const result = await route.run(body);
+    if (result?.file) {
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${result.name}"`,
+        'Cache-Control': 'no-store',
+      });
+      return res.end(result.file);
+    }
+    sendJson(res, 200, result);
   } catch (error) {
     if (error instanceof SyntaxError || error instanceof RequestError) {
-      status = 400;
-      payload = { error: 'bad-request', message: error instanceof RequestError ? error.message : 'The request was not valid.' };
+      sendJson(res, 400, { error: 'bad-request', message: error instanceof RequestError ? error.message : 'The request was not valid.' });
     } else if (error instanceof DeckError) {
-      status = 422;
-      payload = { error: error.code, message: "This topic doesn't have enough pictures yet. Try a broader topic." };
+      sendJson(res, 422, { error: error.code, message: "This topic doesn't have enough pictures yet. Try a broader topic." });
     } else {
-      console.error('creating a deck failed:', error.message);
-      status = 502;
-      payload = { error: 'upstream', message: 'Something went wrong while creating your Lotería.' };
+      console.error(`${req.url} failed:`, error.message);
+      sendJson(res, 502, { error: 'upstream', message: route.failure });
     }
   }
-  send(res, status, JSON.stringify(payload), 'application/json; charset=utf-8');
 }
 
 async function serveStatic(req, res) {
-  const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  let path;
+  try {
+    path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  } catch {
+    return send(res, 400, 'Bad request', 'text/plain');
+  }
   const file = normalize(join(PUBLIC, path === '/' ? 'index.html' : path));
   if (!file.startsWith(PUBLIC + sep) || !TYPES[extname(file)]) return send(res, 404, 'Not found', 'text/plain');
   try {
@@ -86,12 +130,14 @@ function readBody(req) {
     req.setEncoding('utf8');
     req.on('data', chunk => {
       body += chunk;
-      if (body.length > 10_000) reject(new RequestError('The request is too large.'));
+      if (body.length > 20_000) reject(new RequestError('The request is too large.'));
     });
     req.on('end', () => resolve(body));
     req.on('error', reject);
   });
 }
+
+const sendJson = (res, status, payload) => send(res, status, JSON.stringify(payload), 'application/json; charset=utf-8');
 
 function send(res, status, body, type) {
   res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' });
@@ -100,8 +146,14 @@ function send(res, status, body, type) {
 
 const port = Number(process.env.PORT) || 3000;
 createServer((req, res) => {
-  const handler = api[new URL(req.url, 'http://localhost').pathname];
-  if (handler && req.method === 'POST') return handleApi(req, res, handler);
+  let pathname;
+  try {
+    pathname = new URL(req.url, 'http://localhost').pathname;
+  } catch {
+    return send(res, 400, 'Bad request', 'text/plain');
+  }
+  const route = Object.hasOwn(api, pathname) ? api[pathname] : null;
+  if (route && req.method === 'POST') return handleApi(req, res, route);
   if (req.method === 'GET') return serveStatic(req, res);
   send(res, 405, 'Method not allowed', 'text/plain');
 }).listen(port, () => console.log(`Loter-IA is running at http://localhost:${port}`));
