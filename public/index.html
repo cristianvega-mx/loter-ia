@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loter-IA</title>
+<meta name="description" content="Turn any class topic into a ready-to-print Lotería.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='5' y='2' width='22' height='28' rx='3' fill='%23fff' stroke='%231f1a17' stroke-width='2'/%3E%3Crect x='8' y='5' width='16' height='16' fill='%23F5C842'/%3E%3Ccircle cx='16' cy='13' r='5' fill='%23C62D2D'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">Loter-<span>IA</span></a>
+</header>
+
+<main>
+  <section class="start" aria-labelledby="start-title">
+    <h1 id="start-title">Turn any lesson into a Lotería</h1>
+    <p class="intro">Type what your class is learning. Loter-IA makes 24 picture cards for the game.</p>
+    <form id="start-form" class="start-form" novalidate>
+      <div class="field topic-field">
+        <label for="topic">Topic</label>
+        <input id="topic" name="topic" maxlength="80" placeholder="the solar system" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="language">Card language</label>
+        <select id="language" name="language">
+          <option>Spanish</option>
+          <option>English</option>
+          <option>French</option>
+          <option>Portuguese</option>
+          <option>German</option>
+          <option>Italian</option>
+        </select>
+      </div>
+      <button id="create" type="submit" class="primary">Create my Lotería</button>
+    </form>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section id="deck" class="deck" hidden aria-labelledby="deck-title">
+    <div class="deck-head">
+      <p class="eyebrow">Your Lotería</p>
+      <h2 id="deck-title"></h2>
+    </div>
+    <ol id="cards" class="cards"></ol>
+  </section>
+</main>
+
+<footer class="credit">
+  Pictograms: Sergio Palao. Origin: <a href="https://arasaac.org" target="_blank" rel="noopener">ARASAAC</a>. License: CC (BY-NC-SA). Owner: Government of Aragón (Spain).
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "loter-ia",
+  "version": "0.1.0",
+  "description": "Turn any class topic into a ready-to-print Lotería made with ARASAAC pictograms.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test \"test/**/*.test.js\"",
+    "coverage": "node --env-file-if-exists=.env scripts/coverage.js"
+  }
+}
