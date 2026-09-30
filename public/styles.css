@@ -118,7 +118,35 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
 /* Deck */
 .deck { margin-top: 18px; }
-.deck-head { margin-bottom: 14px; }
+.deck-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+  margin-bottom: 6px;
+}
+.deck-actions { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.boards-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.boards-form label {
+  align-self: center;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.boards-form input { width: 92px; }
+.secondary {
+  background: #fff;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  padding: 0 18px;
+  font-family: var(--display);
+  font-size: 19px;
+  letter-spacing: .03em;
+}
+.secondary:hover { background: var(--paper); }
+#deck-status:empty { display: none; }
 .eyebrow { margin: 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .deck-head h2 {
   margin: 0;
@@ -204,8 +232,82 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 @media (max-width: 560px) {
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .start-form { box-shadow: 4px 4px 0 var(--ink); }
-  .primary { width: 100%; }
+  .start-form .primary { width: 100%; }
   .field { flex: 1 1 100%; }
+  .deck-actions, .boards-form { width: 100%; }
+  .boards-form .primary, .secondary { flex: 1 1 auto; }
+}
+
+/* Print: only the boards or cards the teacher asked for, on letter paper, landscape. */
+#print-area { display: none; }
+
+.print-page {
+  display: flex;
+  flex-direction: column;
+  height: 7.75in;
+  break-after: page;
+  color: #1f1a17;
+  font-family: system-ui, "Segoe UI", sans-serif;
+}
+.print-page:last-child { break-after: auto; }
+.print-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: .08in;
+  font-family: var(--display);
+  font-size: 16pt;
+  letter-spacing: .02em;
+}
+.print-brand { color: var(--red); }
+.print-topic { flex: 1; text-align: center; }
+.print-body { flex: 1; min-height: 0; display: flex; }
+.print-credit { margin: .05in 0 0; font-size: 7pt; color: #555; text-align: center; }
+
+.board-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: .1in;
+  padding: .1in;
+  border: 3px solid #1f1a17;
+  border-radius: 6px;
+}
+.cut-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+.cut-grid .print-card { border: 1px dashed #9a8f82; padding: .12in; }
+
+.print-card { display: flex; flex-direction: column; min-height: 0; background: #fff; }
+.board-grid .print-card { border: 1.5px solid #1f1a17; border-radius: 4px; padding: .05in; }
+.print-card .art {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-color, #f5c842);
+  border-radius: 3px 3px 0 0;
+}
+.print-card .art img { max-width: 82%; max-height: 90%; width: auto; height: auto; object-fit: contain; }
+.print-card .name { font-size: 12pt; padding: .04in 0 0; }
+.cut-grid .print-card .name { font-size: 14pt; }
+
+@media print {
+  @page { size: letter landscape; margin: .35in; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff; display: block; min-height: 0; }
+  body.has-print > header,
+  body.has-print > main,
+  body.has-print > footer { display: none !important; }
+  body.has-print #print-area { display: block; }
+  .regen, .note, .deck-actions, .start-form { display: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

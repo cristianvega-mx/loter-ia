@@ -29,7 +29,7 @@ Build mode: fast
   Learner check: Press "Regenerate" on a card you don't like and check that a different card takes its place while the rest stay the same.
   Commit: `Regenerate a single card`
 
-- [ ] **3. Print the boards and the cards**
+- [x] **3. Print the boards and the cards**
   Becomes usable: The teacher chooses how many boards (1–60) and prints them: one 4 × 3 board per landscape page, all different. The teacher can also print the 24 cards, 8 per page, to cut out.
   Why now: Paper boards are how the class actually plays. With the deck settled, printing is the next step of the journey.
   PRD ref: `prd.md > Boards`, `prd.md > Printing the Cards`, `prd.md > The Core Journey` (steps 5–6)
