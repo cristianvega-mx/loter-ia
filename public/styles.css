@@ -128,7 +128,7 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
   align-items: flex-end;
   justify-content: space-between;
   gap: 14px 24px;
-  margin-bottom: 6px;
+  margin-bottom: 16px;
 }
 .deck-actions { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
 .boards-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
