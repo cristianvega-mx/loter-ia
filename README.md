@@ -8,6 +8,8 @@ The name joins *Lotería* and *IA*, Spanish for AI.
 
 **Demo video (a minute and a half):** https://youtu.be/pNbD7RqjFEg
 
+**Project page:** https://devpost.com/software/loter-ia
+
 ## Run it
 
 You need Node.js 24 and an Amazon Bedrock API key with access to Amazon Nova.
