@@ -67,11 +67,14 @@ Build mode: fast
 
 - [x] Early usable behavior explored — after slice 1 (the deck): the look and the pictures, while printing and calling can still adapt
   Feedback: Cristian tried "animals" in English and liked the result ("me parece muy bien"). He noticed the boards were still missing (planned in slice 3). His first try showed "Failed to fetch" because the local server had been stopped; the unclear message is covered in slice 5.
-- [ ] Final kick-the-tires exploration and feedback completed
+- [x] Final kick-the-tires exploration and feedback completed
+  Feedback: Cristian was invited to try the whole journey on his own: create a Lotería, regenerate a card, download both PDFs, call the cards, and try an empty topic and a nonsense one. His report: "así está bien, me gustó mucho" ("it's good as it is, I liked it a lot"). He asked for no changes.
 
 ## Final Review
 
-- [ ] Final review complete — feedback resolved and learner confirms ready to ship
+- [x] Final review complete — feedback resolved and learner confirms ready to ship
+  Outcome: no changes were requested, so there were no revisions to make. `npm test` passed (37 tests) and the app was running at http://localhost:3000 when he confirmed.
+  Known limits he was told about before confirming: a topic with too few pictograms gets the "try a broader topic" message (for example "dinosaurs"), the AI sometimes picks the wrong article for a name (Regenerate replaces that card), and a Lotería takes 15 to 40 seconds to create.
 
 ## Code Tour and App Map
 
