@@ -78,15 +78,15 @@ Build mode: fast
 
 ## Code Tour and App Map
 
-- [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
-- [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
+- [x] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
+- [x] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
 - [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
 
-Activity and evidence: In progress. No learning goal was established, so the default route is used: follow "Create my Lotería" from the button to the cards on screen. The three stops were sent to Cristian in Spanish with links to the real files, together with the takeaway that seeing the app work early changed the printing plan (see `## Revisions`: PDF downloads instead of the print window). His response is pending; resume here by recording what he did with it. The map was checked by a script (every path, search text, and code excerpt matches the source at commit 1c70196) and rendered in a browser in both languages, at desktop and phone widths, and with a dark theme. It is one page in English and Spanish, so it is committed while the Spanish review pages stay local.
-Route and stops: `public/app.js` > `$('start-form').addEventListener('submit', …)` → on the way, `server.js` > `'/api/deck'` → `lib/deck.js` > `buildDeck` → `public/app.js` > `cardElement`. Sent as a reference route; not yet confirmed as followed.
-Edit outcome: Offered, pending — the number of boards the page suggests (`public/index.html`, `id="board-count"`, `value="30"`).
-Reflection: Offered, pending.
-Activity mode: Static walkthrough in the chat with links to the source files, rather than a live editor session, plus the app map.
+Activity and evidence: A brief recap, not hands-on practice. No learning goal was established, so the default route was used: follow "Create my Lotería" from the button to the cards on screen. The three stops were sent to Cristian in Spanish with links to the real files, together with the takeaway that seeing the app work early changed the printing plan (see `## Revisions`: PDF downloads instead of the print window). He read it and chose to move on to shipping ("sigamos, todo está bien"). He did not report opening the files, so no stop is recorded as followed. The map was checked by a script (every path, search text, and code excerpt matches the source at commit 1c70196) and rendered in a browser in both languages, at desktop and phone widths, and with a dark theme. It is one page in English and Spanish, so it is committed while the Spanish review pages stay local.
+Route and stops: `public/app.js` > `$('start-form').addEventListener('submit', …)` → on the way, `server.js` > `'/api/deck'` → `lib/deck.js` > `buildDeck` → `public/app.js` > `cardElement`. A reference route; it was not toured interactively.
+Edit outcome: Offered and not taken up — the number of boards the page suggests stays at 30 (`public/index.html`, `id="board-count"`). No code changed.
+Reflection: Offered; he answered briefly. His answer is kept in the private learner profile.
+Activity mode: Recap — a static walkthrough in the chat with links to the source files, rather than a live editor session, plus the app map.
 
 ## Revisions
 
