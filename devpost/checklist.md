@@ -101,3 +101,4 @@ Activity mode: Recap — a static walkthrough in the chat with links to the sour
 - The cost statements were corrected after measuring real token counts in `6-ship`: a Lotería costs about one US cent (measured $0.008 and $0.011), not "under one cent" — the README, the spec, and the coverage script said less.
 - The license note about the pictograms moved from `LICENSE` to `NOTICE`, so the repository page shows the license as plain MIT — the contest asks for a license that is detectable at the top of the repository.
 - The server now throws away the rest of an upload once it passes the size limit — before, an oversized request was refused but kept filling memory, which matters on a public link.
+- Card titles now always take the definite article — a take for the demo video came out with "A Comet" and "A Star" next to "The Sun". Both prompts in `lib/nova.js` say so now; five real decks in English, Spanish, and French came out consistent afterward.
