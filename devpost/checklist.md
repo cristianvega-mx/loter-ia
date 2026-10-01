@@ -80,13 +80,13 @@ Build mode: fast
 
 - [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
 - [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
-- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
+- [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
 
-Activity and evidence: [what actually happened; real document/test/code references; unfinished work if interrupted]
-Route and stops: [actual paths and symbols; guided stops completed, or reference-only route]
-Edit outcome: [tried/kept/reverted/declined/not applicable; verification if changed]
-Reflection: [offered/answered/declined/already covered — personal answer belongs only in the ignored profile]
-Activity mode: [live app and editor, explicit static fallback, focused alternative, prior practice, or recap]
+Activity and evidence: In progress. No learning goal was established, so the default route is used: follow "Create my Lotería" from the button to the cards on screen. The three stops were sent to Cristian in Spanish with links to the real files, together with the takeaway that seeing the app work early changed the printing plan (see `## Revisions`: PDF downloads instead of the print window). His response is pending; resume here by recording what he did with it. The map was checked by a script (every path, search text, and code excerpt matches the source at commit 1c70196) and rendered in a browser in both languages, at desktop and phone widths, and with a dark theme. It is one page in English and Spanish, so it is committed while the Spanish review pages stay local.
+Route and stops: `public/app.js` > `$('start-form').addEventListener('submit', …)` → on the way, `server.js` > `'/api/deck'` → `lib/deck.js` > `buildDeck` → `public/app.js` > `cardElement`. Sent as a reference route; not yet confirmed as followed.
+Edit outcome: Offered, pending — the number of boards the page suggests (`public/index.html`, `id="board-count"`, `value="30"`).
+Reflection: Offered, pending.
+Activity mode: Static walkthrough in the chat with links to the source files, rather than a live editor session, plus the app map.
 
 ## Revisions
 

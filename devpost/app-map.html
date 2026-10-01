@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loter-IA — App Map</title>
+<style>
+  :root {
+    --paper: #fbf6ec;
+    --surface: #ffffff;
+    --ink: #1f1a17;
+    --muted: #6b6158;
+    --line: #e2d7c5;
+    --chip: #f3ead9;
+    --red: #c62d2d;
+    --yellow: #d49a00;
+    --yellow-text: #8a6400;
+    --blue: #2f6db5;
+    --green: #2f8a57;
+    --pink: #c9557c;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1a1614; --surface: #241f1c; --ink: #f3ece3; --muted: #b4a89b; --line: #3a322d; --chip: #2f2824;
+      --red: #e8645e; --yellow: #e9bf45; --yellow-text: #e9bf45; --blue: #7aa7e0; --green: #6fbf8a; --pink: #e59ab2;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  .top, main { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 18px; }
+  .brand { margin: 0; font-family: "Anton", Impact, "Arial Narrow", sans-serif; font-size: 28px; letter-spacing: .02em; }
+  .brand span { color: var(--red); }
+  main { padding-bottom: 56px; }
+  h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.15; margin: 18px 0 8px; }
+  h2 { font-size: 21px; margin: 0 0 10px; }
+  h3 { font-size: 16px; margin: 0 0 4px; }
+  p { margin: 0 0 10px; }
+  section { margin-top: 40px; }
+  .lead { font-size: 18px; max-width: 62ch; }
+  .muted { color: var(--muted); font-size: 14px; }
+  code {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 13px;
+    background: var(--chip);
+    padding: 1px 6px;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+  }
+
+  /* Language switch: two radio buttons, so it works without scripts. */
+  .lang-input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .lang-switch { margin: 0; display: flex; border: 2px solid var(--ink); border-radius: 999px; overflow: hidden; }
+  .lang-switch label { padding: 4px 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  #lang-en:checked ~ .top label[for="lang-en"],
+  #lang-es:checked ~ .top label[for="lang-es"] { background: var(--ink); color: var(--paper); }
+  #lang-en:focus-visible ~ .top .lang-switch,
+  #lang-es:focus-visible ~ .top .lang-switch { outline: 3px solid var(--blue); outline-offset: 3px; }
+  #lang-en:checked ~ main [lang="es"],
+  #lang-es:checked ~ main [lang="en"] { display: none; }
+
+  /* The main pieces */
+  .pieces { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+  .piece { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--yellow); border-radius: 12px; padding: 12px 14px; }
+  .piece:nth-child(2), .piece:nth-child(3) { border-top-color: var(--blue); }
+  .piece:nth-child(4) { border-top-color: var(--pink); }
+  .piece p { margin: 0 0 6px; font-size: 15px; }
+  .piece p:last-child { margin: 0; }
+
+  /* Diagram: three columns (browser, server, outside services) with the action flowing through them. */
+  .diagram {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr) 40px minmax(0, 1fr);
+    grid-template-rows: auto auto 36px auto;
+    align-items: stretch;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px 18px;
+    margin-top: 14px;
+  }
+  .lane { margin: 0 0 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; grid-row: 1; }
+  .lane-browser { grid-column: 1; color: var(--yellow-text); }
+  .lane-server { grid-column: 3; color: var(--blue); }
+  .lane-outside { grid-column: 5; color: var(--green); }
+  .box {
+    border: 2px solid var(--ink);
+    border-left: 8px solid var(--yellow);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .box strong { font-size: 15px; }
+  .box .where { display: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .box code { align-self: flex-start; margin-top: 3px; }
+  .box.server { border-left-color: var(--blue); }
+  .box.outside { border-left-color: var(--green); border-style: dashed; border-left-style: solid; }
+  .num {
+    display: inline-grid; place-items: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--ink); color: var(--paper);
+    font-size: 12px; font-weight: 700; margin-right: 6px; vertical-align: 1px;
+  }
+  .a { grid-area: 2 / 1; }
+  .b { grid-area: 2 / 3; }
+  .c { grid-area: 4 / 3; align-self: center; }
+  .f { grid-area: 4 / 1; align-self: center; }
+  .helpers { grid-area: 4 / 5; display: grid; gap: 10px; }
+  .arrow { display: grid; place-items: center; color: var(--muted); font-size: 26px; line-height: 1; }
+  .arrow::before { content: "→"; }
+  .ab { grid-area: 2 / 2; }
+  .bc { grid-area: 3 / 3; }
+  .bc::before { content: "↓"; }
+  .cd { grid-area: 4 / 4; }
+  .cd::before { content: "⇄"; }
+  .cf { grid-area: 4 / 2; }
+  .cf::before { content: "←"; }
+
+  /* The route */
+  .stops { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .stop { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .stop h3 { font-size: 17px; margin-bottom: 6px; }
+  .find { margin: 0 0 8px; font-size: 14px; }
+  .bridge { border-style: dashed; background: transparent; }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--blue); }
+  summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+  pre {
+    margin: 8px 0 0;
+    padding: 12px 14px;
+    background: var(--chip);
+    border-radius: 10px;
+    overflow-x: auto;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+
+  /* To change this, start here */
+  .changes { margin: 14px 0 0; }
+  .changes div { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 8fr); gap: 4px 18px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .changes dt { font-weight: 600; }
+  .changes dd { margin: 0; font-size: 15px; }
+  .after { margin-top: 12px; }
+
+  .practice { background: var(--surface); border: 2px solid var(--ink); border-radius: 14px; padding: 16px 18px; box-shadow: 5px 5px 0 var(--ink); }
+  .practice ul, .run ul { margin: 6px 0 10px; padding-left: 20px; }
+  .practice li, .run li { margin-bottom: 5px; }
+  .practice p:last-child { margin: 0; }
+
+  @media (max-width: 720px) {
+    .pieces { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .diagram { display: flex; flex-direction: column; gap: 4px; }
+    .lane { display: none; }
+    .box .where { display: block; }
+    .arrow { padding: 2px 0; }
+    .ab::before, .cf::before { content: "↓"; }
+    .cd::before { content: "⇅"; }
+    .changes div { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 420px) {
+    .pieces { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<input class="lang-input" type="radio" name="lang" id="lang-en" checked>
+<input class="lang-input" type="radio" name="lang" id="lang-es">
+
+<header class="top">
+  <p class="brand">Loter-<span>IA</span></p>
+  <p class="lang-switch"><label for="lang-en">English</label><label for="lang-es">Español</label></p>
+</header>
+
+<main>
+  <h1><span lang="en">App map</span><span lang="es">Mapa de la app</span></h1>
+  <p class="lead" lang="en">Where each thing lives in the code, and where to start when you want to change something.</p>
+  <p class="lead" lang="es">Dónde vive cada cosa en el código y por dónde empezar cuando quieras cambiar algo.</p>
+
+  <section>
+    <h2 id="what-en" lang="en">What the app does</h2>
+    <h2 id="what-es" lang="es">Qué hace la app</h2>
+    <p lang="en">A teacher types a class topic and picks a language. Loter-IA makes a Lotería with 24 picture cards, lets the teacher swap any card, and gives two PDF files to print: the boards and the cards to cut out. The teacher can also call the cards on screen.</p>
+    <p lang="es">Un maestro escribe el tema de su clase y elige un idioma. Loter-IA crea una Lotería de 24 cartas con dibujo, deja cambiar cualquier carta y entrega dos archivos PDF para imprimir: las tablas y las cartas para recortar. El maestro también puede cantar las cartas en la pantalla.</p>
+    <p lang="en">It has four main pieces:</p>
+    <p lang="es">Tiene cuatro piezas principales:</p>
+    <div class="pieces">
+      <div class="piece">
+        <h3><span lang="en">The page</span><span lang="es">La página</span></h3>
+        <p lang="en">What the teacher sees and clicks: the form, the cards, the buttons, the caller.</p>
+        <p lang="es">Lo que el maestro ve y toca: el formulario, las cartas, los botones y el cantador.</p>
+        <p><code>public/</code></p>
+      </div>
+      <div class="piece">
+        <h3><span lang="en">The server</span><span lang="es">El servidor</span></h3>
+        <p lang="en">Receives what the page asks for, keeps the Amazon key private, and applies the daily limit.</p>
+        <p lang="es">Recibe lo que pide la página, guarda en privado la llave de Amazon y aplica el límite diario.</p>
+        <p><code>server.js</code></p>
+      </div>
+      <div class="piece">
+        <h3><span lang="en">The deck builder</span><span lang="es">El armador de la baraja</span></h3>
+        <p lang="en">The recipe that turns a topic into 24 cards. It asks the AI for ideas and looks for the pictures.</p>
+        <p lang="es">La receta que convierte un tema en 24 cartas. Le pide ideas a la IA y busca los dibujos.</p>
+        <p><code>lib/deck.js</code> <code>lib/nova.js</code> <code>lib/arasaac.js</code></p>
+      </div>
+      <div class="piece">
+        <h3><span lang="en">The PDF maker</span><span lang="es">El creador de PDF</span></h3>
+        <p lang="en">Makes boards that are all different and draws the two PDF files.</p>
+        <p lang="es">Arma tablas que son todas diferentes y dibuja los dos archivos PDF.</p>
+        <p><code>lib/boards.js</code> <code>lib/pdf.js</code></p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="flow-en" lang="en">One action, start to finish</h2>
+    <h2 id="flow-es" lang="es">Una acción, de principio a fin</h2>
+    <p lang="en">What happens when the teacher presses <strong>Create my Lotería</strong>. The page runs in the teacher's browser. The server is a separate program: it runs on your own computer when you start the app there, or on a hosting machine when the app has a public link. Only the server talks to the two outside services.</p>
+    <p lang="es">Lo que pasa cuando el maestro presiona <strong>Create my Lotería</strong>. La página corre en el navegador del maestro. El servidor es un programa aparte: corre en tu propia computadora cuando enciendes la app ahí, o en una máquina de hospedaje cuando la app tiene un enlace público. Solo el servidor habla con los dos servicios de afuera.</p>
+
+    <div class="diagram">
+      <p class="lane lane-browser"><span lang="en">In the browser</span><span lang="es">En el navegador</span></p>
+      <p class="lane lane-server"><span lang="en">On the server</span><span lang="es">En el servidor</span></p>
+      <p class="lane lane-outside"><span lang="en">Outside services</span><span lang="es">Servicios de afuera</span></p>
+
+      <div class="box a">
+        <span class="where"><span lang="en">In the browser</span><span lang="es">En el navegador</span></span>
+        <strong><span class="num">1</span><span lang="en">The button is pressed</span><span lang="es">Se presiona el botón</span></strong>
+        <span lang="en">The page sends the topic and the language to the server.</span>
+        <span lang="es">La página manda el tema y el idioma al servidor.</span>
+        <code>public/app.js</code>
+      </div>
+      <div class="arrow ab" aria-hidden="true"></div>
+      <div class="box server b">
+        <span class="where"><span lang="en">On the server</span><span lang="es">En el servidor</span></span>
+        <strong><span class="num">2</span><span lang="en">The server receives it</span><span lang="es">El servidor lo recibe</span></strong>
+        <span lang="en">It checks the topic and counts the request toward today's limit.</span>
+        <span lang="es">Revisa el tema y cuenta la petición para el límite del día.</span>
+        <code>server.js</code>
+      </div>
+      <div class="arrow bc" aria-hidden="true"></div>
+      <div class="box server c">
+        <span class="where"><span lang="en">On the server</span><span lang="es">En el servidor</span></span>
+        <strong><span class="num">3</span><span lang="en">The deck builder works</span><span lang="es">El armador trabaja</span></strong>
+        <span lang="en">Ideas, then pictures, then a review. It keeps 24 cards and saves the extras as spares.</span>
+        <span lang="es">Ideas, luego dibujos, luego una revisión. Se queda con 24 cartas y guarda las demás como repuesto.</span>
+        <code>lib/deck.js</code>
+      </div>
+      <div class="arrow cd" aria-hidden="true"></div>
+      <div class="helpers">
+        <div class="box outside">
+          <span class="where"><span lang="en">Outside service</span><span lang="es">Servicio de afuera</span></span>
+          <strong><span lang="en">Amazon Nova (the AI)</span><span lang="es">Amazon Nova (la IA)</span></strong>
+          <span lang="en">Proposes the concepts, then reviews every card.</span>
+          <span lang="es">Propone los conceptos y después revisa cada carta.</span>
+          <code>lib/nova.js</code>
+        </div>
+        <div class="box outside">
+          <span class="where"><span lang="en">Outside service</span><span lang="es">Servicio de afuera</span></span>
+          <strong>ARASAAC</strong>
+          <span lang="en">Free pictogram library. Up to three pictures per concept.</span>
+          <span lang="es">Biblioteca gratuita de pictogramas. Hasta tres dibujos por concepto.</span>
+          <code>lib/arasaac.js</code>
+        </div>
+      </div>
+      <div class="arrow cf" aria-hidden="true"></div>
+      <div class="box f">
+        <span class="where"><span lang="en">In the browser</span><span lang="es">En el navegador</span></span>
+        <strong><span class="num">4</span><span lang="en">The 24 cards appear</span><span lang="es">Aparecen las 24 cartas</span></strong>
+        <span lang="en">Each one with its picture, its name, and a Regenerate button.</span>
+        <span lang="es">Cada una con su dibujo, su nombre y un botón Regenerate.</span>
+        <code>public/app.js</code>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="route-en" lang="en">Reference route: follow that action through the code</h2>
+    <h2 id="route-es" lang="es">Ruta de referencia: sigue esa acción por el código</h2>
+    <p lang="en">Three stops. Open each file and use your editor's search to find the text shown.</p>
+    <p lang="es">Tres paradas. Abre cada archivo y usa el buscador de tu editor para encontrar el texto indicado.</p>
+
+    <ol class="stops">
+      <li class="stop">
+        <h3><span lang="en">Stop 1 · The button</span><span lang="es">Parada 1 · El botón</span></h3>
+        <p class="find"><code>public/app.js</code> <span lang="en">— search for</span><span lang="es">— busca</span> <code>$('start-form').addEventListener</code></p>
+        <p lang="en">This runs when the teacher presses Create my Lotería. It reads the topic and the language, shows “Creating your Lotería…” with 24 blank cards, and asks the server for the deck. With an empty topic it stops and says “Type a topic first.”</p>
+        <p lang="es">Esto corre cuando el maestro presiona Create my Lotería. Lee el tema y el idioma, muestra “Creating your Lotería…” con 24 cartas en blanco y le pide la baraja al servidor. Si el tema está vacío, se detiene y avisa “Type a topic first.”</p>
+        <details>
+          <summary><span lang="en">See the code (first lines)</span><span lang="es">Ver el código (primeras líneas)</span></summary>
+<pre><code>$('start-form').addEventListener('submit', async event =&gt; {
+  event.preventDefault();
+  const topic = $('topic').value.trim();
+  const language = $('language').value;
+  if (!topic) {
+    showStatus('Type a topic first.', true);
+    $('topic').focus();
+    return;
+  }
+  setBusy(true);
+  showStatus('Creating your Lotería…');
+  showDeckStatus('');
+  showPlaceholders(topic);
+  try {
+    state.deck = await post('/api/deck', { topic, language });</code></pre>
+        </details>
+      </li>
+
+      <li class="stop bridge">
+        <p class="find"><span lang="en">On the way:</span><span lang="es">De camino:</span> <code>server.js</code> <span lang="en">— search for</span><span lang="es">— busca</span> <code>'/api/deck'</code></p>
+        <p lang="en">The server receives the request here. It checks the topic and the language, counts the request toward the daily limit, and calls the deck builder.</p>
+        <p lang="es">Aquí el servidor recibe la petición. Revisa el tema y el idioma, cuenta la petición para el límite diario y llama al armador de la baraja.</p>
+      </li>
+
+      <li class="stop">
+        <h3><span lang="en">Stop 2 · The recipe</span><span lang="es">Parada 2 · La receta</span></h3>
+        <p class="find"><code>lib/deck.js</code> <span lang="en">— search for</span><span lang="es">— busca</span> <code>export async function buildDeck</code></p>
+        <p lang="en">The heart of the app. It asks the AI for 36 ideas, looks for pictures of each one, and has the AI review them. The first 24 good cards become the deck; the rest are kept as spares for Regenerate. If 24 are not reached it asks again, up to three rounds. If it still falls short, the teacher is told to try a broader topic.</p>
+        <p lang="es">El corazón de la app. Le pide 36 ideas a la IA, busca dibujos para cada una y hace que la IA las revise. Las primeras 24 cartas buenas forman la baraja; las demás se guardan como repuesto para Regenerate. Si no llega a 24, vuelve a pedir, hasta tres rondas. Si aun así no alcanza, le avisa al maestro que pruebe un tema más amplio.</p>
+        <details>
+          <summary><span lang="en">See the code</span><span lang="es">Ver el código</span></summary>
+<pre><code>export async function buildDeck({ topic, language }, services) {
+  const deck = { topic, language, cards: [], spares: [] };
+  const tried = [];
+  for (let round = 0; round &lt; ROUNDS &amp;&amp; deck.cards.length &lt; DECK_SIZE; round++) {
+    const ideasSoFar = tried.length;
+    const fresh = await newCards({ topic, language, count: CANDIDATES, avoid: [...tried], existing: allCards(deck) }, services, tried);
+    for (const card of fresh) (deck.cards.length &lt; DECK_SIZE ? deck.cards : deck.spares).push(card);
+    if (tried.length === ideasSoFar) break; // no ideas at all (a nonsense topic): asking again won't help
+  }
+  if (deck.cards.length &lt; DECK_SIZE) {
+    throw new DeckError('too-narrow', `Only ${deck.cards.length} of ${DECK_SIZE} pictures were found for this topic.`);
+  }
+  return deck;
+}</code></pre>
+        </details>
+      </li>
+
+      <li class="stop">
+        <h3><span lang="en">Stop 3 · The card on screen</span><span lang="es">Parada 3 · La carta en pantalla</span></h3>
+        <p class="find"><code>public/app.js</code> <span lang="en">— search for</span><span lang="es">— busca</span> <code>function cardElement</code></p>
+        <p lang="en">Builds one card: the colored area with the pictogram, the name, and the “↻ Regenerate” button. It runs once for each of the 24 cards. A card's color follows its place in the deck: four colors that repeat.</p>
+        <p lang="es">Arma una carta: el recuadro de color con el pictograma, el nombre y el botón “↻ Regenerate”. Corre una vez por cada una de las 24 cartas. El color de una carta depende de su lugar en la baraja: cuatro colores que se repiten.</p>
+        <details>
+          <summary><span lang="en">See the code</span><span lang="es">Ver el código</span></summary>
+<pre><code>function cardElement(card, index) {
+  const item = document.createElement('li');
+  item.className = 'card';
+  item.dataset.index = index;
+  item.style.setProperty('--card-color', COLORS[index % COLORS.length]);
+  const art = pictureElement(card);
+  const name = document.createElement('p');
+  name.className = 'name';
+  name.textContent = card.name;
+  const regen = document.createElement('button');
+  regen.type = 'button';
+  regen.className = 'regen';
+  regen.textContent = '↻ Regenerate';
+  regen.setAttribute('aria-label', `Regenerate ${card.name}`);
+  const note = document.createElement('p');
+  note.className = 'note';
+  note.setAttribute('role', 'status');
+  item.append(art, name, regen, note);
+  return item;
+}</code></pre>
+        </details>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2 id="change-en" lang="en">To change this, start here</h2>
+    <h2 id="change-es" lang="es">Para cambiar esto, empieza aquí</h2>
+
+    <dl class="changes" lang="en">
+      <div><dt>The words on the page (title, button labels, the example topic)</dt><dd><code>public/index.html</code>. Words that appear later, such as the status messages and “↻ Regenerate”, are in <code>public/app.js</code>.</dd></div>
+      <div><dt>How many boards the page suggests at first (30)</dt><dd><code>public/index.html</code> — search for <code>id="board-count"</code> and change <code>value="30"</code>.</dd></div>
+      <div><dt>The colors and letter styles of the page</dt><dd><code>public/styles.css</code>, the <code>:root</code> block at the top. The four card colors are <code>COLORS</code> in <code>public/app.js</code> and in <code>lib/pdf.js</code>; keep both the same.</dd></div>
+      <div><dt>The card languages offered</dt><dd>The <code>&lt;select id="language"&gt;</code> list in <code>public/index.html</code> and <code>LANGUAGES</code> in <code>server.js</code>. Change both.</dd></div>
+      <div><dt>What the AI is asked to do</dt><dd><code>lib/nova.js</code>: <code>PROPOSE_SYSTEM</code> (choosing the concepts) and <code>REVIEW_SYSTEM</code> (checking the cards). Afterward run <code>npm run coverage</code> to see real decks for six school topics.</dd></div>
+      <div><dt>Which AI model is used, and how many Loterías can be made per day</dt><dd>The private <code>.env</code> file: <code>NOVA_MODEL_ID</code>, <code>DAILY_DECKS</code>, <code>DAILY_MORE</code>. <code>.env.example</code> lists them.</dd></div>
+      <div><dt>The messages the teacher reads when something fails</dt><dd><code>server.js</code>, function <code>handleApi</code>, and <code>public/app.js</code>, function <code>post</code>.</dd></div>
+      <div><dt>How the PDF files look</dt><dd><code>lib/pdf.js</code>: <code>boardsPdf</code>, <code>cardsPdf</code>, and <code>drawCard</code>.</dd></div>
+      <div><dt>A bigger change: cards per deck (24) or per board (12)</dt><dd><code>DECK_SIZE</code> in <code>lib/deck.js</code> and <code>public/app.js</code>, <code>BOARD_SIZE</code> in <code>lib/boards.js</code>, and the grids in <code>lib/pdf.js</code>.</dd></div>
+    </dl>
+    <dl class="changes" lang="es">
+      <div><dt>Las palabras de la página (título, texto de los botones, el tema de ejemplo)</dt><dd><code>public/index.html</code>. Las palabras que aparecen después, como los avisos y “↻ Regenerate”, están en <code>public/app.js</code>.</dd></div>
+      <div><dt>Cuántas tablas sugiere la página al inicio (30)</dt><dd><code>public/index.html</code> — busca <code>id="board-count"</code> y cambia <code>value="30"</code>.</dd></div>
+      <div><dt>Los colores y los tipos de letra de la página</dt><dd><code>public/styles.css</code>, el bloque <code>:root</code> de arriba. Los cuatro colores de las cartas son <code>COLORS</code> en <code>public/app.js</code> y en <code>lib/pdf.js</code>; deja los dos iguales.</dd></div>
+      <div><dt>Los idiomas que se ofrecen para las cartas</dt><dd>La lista <code>&lt;select id="language"&gt;</code> en <code>public/index.html</code> y <code>LANGUAGES</code> en <code>server.js</code>. Cambia los dos.</dd></div>
+      <div><dt>Lo que se le pide a la IA</dt><dd><code>lib/nova.js</code>: <code>PROPOSE_SYSTEM</code> (elegir los conceptos) y <code>REVIEW_SYSTEM</code> (revisar las cartas). Después corre <code>npm run coverage</code> para ver barajas reales de seis temas escolares.</dd></div>
+      <div><dt>Qué modelo de IA se usa y cuántas Loterías se pueden crear por día</dt><dd>El archivo privado <code>.env</code>: <code>NOVA_MODEL_ID</code>, <code>DAILY_DECKS</code>, <code>DAILY_MORE</code>. <code>.env.example</code> los enlista.</dd></div>
+      <div><dt>Los avisos que lee el maestro cuando algo falla</dt><dd><code>server.js</code>, función <code>handleApi</code>, y <code>public/app.js</code>, función <code>post</code>.</dd></div>
+      <div><dt>Cómo se ven los archivos PDF</dt><dd><code>lib/pdf.js</code>: <code>boardsPdf</code>, <code>cardsPdf</code> y <code>drawCard</code>.</dd></div>
+      <div><dt>Un cambio más grande: cartas por baraja (24) o por tabla (12)</dt><dd><code>DECK_SIZE</code> en <code>lib/deck.js</code> y <code>public/app.js</code>, <code>BOARD_SIZE</code> en <code>lib/boards.js</code>, y las cuadrículas en <code>lib/pdf.js</code>.</dd></div>
+    </dl>
+    <p class="after" lang="en">After a change in <code>public/</code>, reload the page. After a change in <code>server.js</code> or <code>lib/</code>, run <code>npm test</code> and start the app again.</p>
+    <p class="after" lang="es">Después de un cambio en <code>public/</code>, recarga la página. Después de un cambio en <code>server.js</code> o <code>lib/</code>, corre <code>npm test</code> y vuelve a encender la app.</p>
+  </section>
+
+  <section>
+    <div class="practice" lang="en">
+      <h2 id="practice-en">A practice to reuse: try real results early</h2>
+      <p>What happened in this project:</p>
+      <ul>
+        <li>The first working step, a deck made from a topic, was built before anything else. It was tried by hand in the browser and by a script that builds real decks for six school topics: <code>scripts/coverage.js</code>, run with <code>npm run coverage</code>.</li>
+        <li>The script showed problems the plan had not predicted: planet Earth drawn as garden soil, a fairy-tale dwarf for “dwarf planet”, lions among the farm animals. The fixes were a different AI model, stricter picture matching (<code>hasKeyword</code> in <code>lib/arasaac.js</code>), and a second look by the AI at every card (<code>reviewCards</code> in <code>lib/nova.js</code>).</li>
+        <li>Seeing the app work early also changed the plan for printing. It was going to be the browser's print window; it became one PDF file with all the boards, made in <code>lib/pdf.js</code>.</li>
+        <li>Each change is written down with its reason in <code>devpost/checklist.md</code>, under Revisions.</li>
+      </ul>
+      <p>On another project: build the smallest step that can really be used, try it with real examples before building around it, and write down what changed and why.</p>
+    </div>
+    <div class="practice" lang="es">
+      <h2 id="practice-es">Una práctica para repetir: prueba resultados reales desde el principio</h2>
+      <p>Lo que pasó en este proyecto:</p>
+      <ul>
+        <li>El primer paso que ya funcionaba, una baraja a partir de un tema, se construyó antes que todo lo demás. Se probó a mano en el navegador y con un programa que arma barajas reales de seis temas escolares: <code>scripts/coverage.js</code>, que se corre con <code>npm run coverage</code>.</li>
+        <li>El programa mostró problemas que el plan no había previsto: el planeta Tierra dibujado como tierra de jardín, un enano de cuento para “planeta enano”, leones entre los animales de la granja. Las soluciones fueron otro modelo de IA, una búsqueda de dibujos más estricta (<code>hasKeyword</code> en <code>lib/arasaac.js</code>) y una segunda revisión de la IA a cada carta (<code>reviewCards</code> en <code>lib/nova.js</code>).</li>
+        <li>Ver la app funcionando desde temprano también cambió el plan para imprimir. Iba a ser la ventana de impresión del navegador; terminó siendo un solo archivo PDF con todas las tablas, hecho en <code>lib/pdf.js</code>.</li>
+        <li>Cada cambio está anotado con su motivo en <code>devpost/checklist.md</code>, en la parte de Revisions.</li>
+      </ul>
+      <p>En otro proyecto: construye el paso más chico que ya se pueda usar, pruébalo con ejemplos reales antes de construir alrededor de él, y anota qué cambió y por qué.</p>
+    </div>
+  </section>
+
+  <section class="run">
+    <h2 id="run-en" lang="en">Run it again</h2>
+    <h2 id="run-es" lang="es">Para volver a encenderla</h2>
+    <ul lang="en">
+      <li>You need Node.js 24 and a private <code>.env</code> file with an Amazon Bedrock key. Copy <code>.env.example</code> to <code>.env</code> and fill it in.</li>
+      <li><code>npm install</code> the first time, then <code>npm start</code>, then open <code>http://localhost:3000</code>.</li>
+      <li><code>npm test</code> runs the tests. They need no internet and no key.</li>
+    </ul>
+    <ul lang="es">
+      <li>Necesitas Node.js 24 y un archivo privado <code>.env</code> con una llave de Amazon Bedrock. Copia <code>.env.example</code> como <code>.env</code> y llénalo.</li>
+      <li><code>npm install</code> la primera vez, luego <code>npm start</code>, y abre <code>http://localhost:3000</code>.</li>
+      <li><code>npm test</code> corre las pruebas. No necesitan internet ni llave.</li>
+    </ul>
+    <p class="muted" lang="en">This map is a snapshot of commit <code>1c70196</code>. The code can change later; if something here does not match, trust the code.</p>
+    <p class="muted" lang="es">Este mapa es una foto del commit <code>1c70196</code>. El código puede cambiar después; si algo aquí no coincide, confía en el código.</p>
+  </section>
+</main>
+
+<script>
+  // Opens in Spanish for Spanish-speaking browsers; without scripts the switch above still works.
+  if ((navigator.language || '').toLowerCase().startsWith('es')) document.getElementById('lang-es').checked = true;
+</script>
+</body>
+</html>

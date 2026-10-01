@@ -42,7 +42,7 @@ docker run -p 3000:3000 --env-file .env loter-ia
 - **The page** (`public/`) is where the teacher types the topic, sees the cards, swaps the ones they don't like, and downloads the PDFs.
 - **The server** (`server.js`, `lib/`) keeps the Amazon key private. It asks Amazon Nova for concepts (`lib/nova.js`), finds a pictogram for each one (`lib/arasaac.js`), and assembles 24 cards plus spares (`lib/deck.js`). It also makes the downloads: boards that are all different (`lib/boards.js`) drawn into PDF files (`lib/pdf.js`).
 
-The planning documents behind this build are in [`devpost/`](devpost/). They were written with the Devpost Learn Skill Pack.
+The planning documents behind this build are in [`devpost/`](devpost/). They were written with the Devpost Learn Skill Pack. For a short tour of the code, open [`devpost/app-map.html`](devpost/app-map.html) in a browser; it is in English and Spanish.
 
 ## Credits
 

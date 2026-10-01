@@ -7,6 +7,8 @@
 node_modules/
 # Spanish review pages for the learner; the English Markdown docs are canonical
 /devpost/*.html
+# The app map is part of the project: one page, in English and Spanish
+!/devpost/app-map.html
 # Devpost Learn Skill Pack install (tooling; reinstall with: npx skills add challengepost/learn-ai-basics --all -y)
 /.agents/
 /.claude/
