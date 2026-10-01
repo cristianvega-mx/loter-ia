@@ -58,7 +58,7 @@ PRD ref: `prd.md > The Core Journey`.
   4. Run `npm test` for the tests (no network or key needed).
   5. Run `npm run coverage` to check pictogram coverage on six school topics with the real services (the Plan B check; about a cent per topic).
 - **Public link (Cristian's choice):** a Docker container on the VPS with Traefik labels, like Puente, at a subdomain of the existing wildcard domain (for example `loter-ia.za0tzv.easypanel.host`). The key goes in the container's environment. A daily limit protects the credit; see *Daily Limit*. **Live since 2026-09-30 at https://loter-ia.za0tzv.easypanel.host**, with daily limits of 30 Loterías and 90 "more cards" requests (under one US dollar a day at worst) and a 512 MB memory cap.
-- **Demo video (required, under 3 minutes, English):** recorded from the running app with a scripted browser and English text-to-speech narration, showing the "What 'Working' Looks Like" steps with "the solar system". Details are handled in `6-ship`.
+- **Demo video (required, under 3 minutes, English):** recorded from the running app with a scripted browser and English text-to-speech narration, showing the "What 'Working' Looks Like" steps with "the solar system". Details are handled in `6-ship`. **Published 2026-10-01: https://youtu.be/pNbD7RqjFEg** (1 min 30 s, public, with English subtitles). The narration is Cristian's own text, written in Spanish and translated as written; the voice is synthetic.
 - **Public repository (required):** code, README with run steps and ARASAAC credit, MIT `LICENSE`, and `devpost/` planning docs. Pictograms are not stored in the repo. **Published 2026-09-30: https://github.com/cristianvega-mx/loter-ia**
 
 ## Look and Feel
