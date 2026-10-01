@@ -39,7 +39,7 @@ Build mode: fast
   Learner check: Ask for 3 boards, press "Print boards", and look at the print preview (you can choose "Save as PDF"); then do the same with "Print cards".
   Commit: `Print boards and cards`
 
-- [ ] **4. Call the cards on screen**
+- [x] **4. Call the cards on screen**
   Becomes usable: "Call cards" opens a full-screen feed with the 24 cards shuffled, one at a time. Swiping, the mouse wheel, or the arrow keys move to the next or previous card, an end card says all cards have been called, and "Back to deck" returns to the deck.
   Why now: It completes the core journey (step 7) using the finished deck.
   PRD ref: `prd.md > Calling the Cards on Screen`, `prd.md > States and Boundaries` (end of the deck)
@@ -93,3 +93,4 @@ Activity mode: [live app and editor, explicit static fallback, focused alternati
 - ARASAAC lookups retry once, and a single failed lookup only loses that concept — a dropped connection failed a whole test run.
 - Added `scripts/coverage.js` (`npm run coverage`) as the Plan B check — all six school topics reached 24 cards, so Plan B (Cloudflare drawings) is not needed.
 - Boards and cards now download as PDFs made on the server with PDFKit, instead of opening the browser's print window — Cristian asked for one file with all the boards, which is easier to save, send, and take to a print shop. `public/boards.js` moved to `lib/boards.js`, and the print styles were removed.
+- The shuffle moved to `public/shuffle.js` — both the caller in the page and the boards on the server need it, and the page can only load files from `public/`.

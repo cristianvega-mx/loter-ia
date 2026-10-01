@@ -1,6 +1,8 @@
 // Loter-IA page: asks the server for a deck, shows the cards, swaps cards on "Regenerate",
-// and downloads the boards and the cards as PDFs. Everything lives in this page while it's open;
-// nothing is saved.
+// downloads the boards and the cards as PDFs, and calls the cards on screen. Everything lives in
+// this page while it's open; nothing is saved.
+
+import { shuffle } from './shuffle.js';
 
 const COLORS = ['#F5C842', '#7FB3E6', '#E88AA6', '#8FCF9F'];
 const DECK_SIZE = 24;
@@ -58,6 +60,69 @@ $('boards-form').addEventListener('submit', event => {
 $('download-cards').addEventListener('click', () => {
   if (state.deck) download('/api/cards.pdf', printable(), $('download-cards'), 'Making your cards…');
 });
+
+$('call-cards').addEventListener('click', openCaller);
+$('caller-back').addEventListener('click', closeCaller);
+
+document.addEventListener('keydown', event => {
+  if ($('caller').hidden) return;
+  const step = { ArrowDown: 1, PageDown: 1, ' ': 1, ArrowUp: -1, PageUp: -1 }[event.key];
+  if (step) {
+    event.preventDefault();
+    $('feed').scrollBy({ top: step * $('feed').clientHeight, behavior: 'smooth' });
+  } else if (event.key === 'Escape') {
+    closeCaller();
+  }
+});
+
+// A full-screen feed with the deck shuffled: one card per screen, then an end card.
+// The browser's own scrolling does the moving (swipe, wheel, trackpad); CSS snaps it card by card.
+function openCaller() {
+  if (!state.deck) return;
+  const { cards } = state.deck;
+  const slides = shuffle(cards).map((card, position) => {
+    const slide = document.createElement('div');
+    slide.className = 'slide';
+    const big = document.createElement('div');
+    big.className = 'big-card';
+    big.style.setProperty('--card-color', COLORS[cards.indexOf(card) % COLORS.length]);
+    const art = document.createElement('div');
+    art.className = 'art';
+    const image = document.createElement('img');
+    image.src = card.image;
+    image.alt = '';
+    art.append(image);
+    const name = document.createElement('p');
+    name.className = 'name';
+    name.textContent = card.name;
+    big.append(art, name);
+    slide.append(big);
+    if (position === 0) {
+      const hint = document.createElement('p');
+      hint.className = 'caller-hint';
+      hint.textContent = 'Swipe up, scroll, or press ↓ for the next card';
+      slide.append(hint);
+    }
+    return slide;
+  });
+  const end = document.createElement('div');
+  end.className = 'slide end-slide';
+  const message = document.createElement('p');
+  message.className = 'end-message';
+  message.textContent = `All ${cards.length} cards have been called`;
+  end.append(message);
+  $('feed').replaceChildren(...slides, end);
+  $('caller').hidden = false;
+  document.body.classList.add('calling');
+  $('feed').scrollTop = 0;
+  $('feed').focus();
+}
+
+function closeCaller() {
+  $('caller').hidden = true;
+  document.body.classList.remove('calling');
+  $('call-cards').focus();
+}
 
 async function regenerate(index) {
   const slot = $('cards').children[index];
@@ -140,7 +205,6 @@ function cardElement(card, index) {
   const image = document.createElement('img');
   image.src = card.image;
   image.alt = '';
-  image.loading = 'lazy';
   art.append(image);
   const name = document.createElement('p');
   name.className = 'name';

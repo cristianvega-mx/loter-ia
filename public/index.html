@@ -54,6 +54,7 @@
           <button id="download-boards" type="submit" class="primary">Download boards (PDF)</button>
         </form>
         <button id="download-cards" type="button" class="secondary">Download cards (PDF)</button>
+        <button id="call-cards" type="button" class="secondary">Call cards</button>
       </div>
     </div>
     <p id="deck-status" class="status" role="status" aria-live="polite"></p>
@@ -64,6 +65,12 @@
 <footer class="credit">
   Pictograms: Sergio Palao. Origin: <a href="https://arasaac.org" target="_blank" rel="noopener">ARASAAC</a>. License: CC (BY-NC-SA). Owner: Government of Aragón (Spain).
 </footer>
+
+<!-- The caller: one shuffled card per screen; swipe, scroll, or use the arrow keys to move. -->
+<section id="caller" class="caller" hidden aria-label="Call the cards">
+  <button id="caller-back" type="button" class="secondary caller-back">← Back to deck</button>
+  <div id="feed" class="feed" tabindex="0"></div>
+</section>
 
 <script type="module" src="app.js"></script>
 </body>

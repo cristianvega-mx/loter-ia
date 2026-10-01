@@ -170,6 +170,7 @@ loteria-bilingue/            # project folder (the public repo can be named lote
 ├── public/
 │   ├── index.html           # the app: Start, Deck, and Caller views
 │   ├── app.js               # page logic: create, regenerate, PDF downloads, caller
+│   ├── shuffle.js           # fair shuffle, shared by the caller (page) and the boards (server)
 │   └── styles.css           # Lotería look and caller feed
 ├── test/
 │   ├── boards.test.js       # 12 different cards per board, no two boards alike, shuffle
