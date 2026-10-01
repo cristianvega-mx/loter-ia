@@ -57,9 +57,9 @@ PRD ref: `prd.md > The Core Journey`.
   3. Open http://localhost:3000.
   4. Run `npm test` for the tests (no network or key needed).
   5. Run `npm run coverage` to check pictogram coverage on six school topics with the real services (the Plan B check; about a cent per topic).
-- **Public link (Cristian's choice):** a Docker container on the VPS with Traefik labels, like Puente, at a subdomain of the existing wildcard domain (for example `loter-ia.za0tzv.easypanel.host`). The key goes in the container's environment. A daily limit protects the credit; see *Daily Limit*.
+- **Public link (Cristian's choice):** a Docker container on the VPS with Traefik labels, like Puente, at a subdomain of the existing wildcard domain (for example `loter-ia.za0tzv.easypanel.host`). The key goes in the container's environment. A daily limit protects the credit; see *Daily Limit*. **Live since 2026-09-30 at https://loter-ia.za0tzv.easypanel.host**, with daily limits of 30 Loterías and 90 "more cards" requests (under one US dollar a day at worst) and a 512 MB memory cap.
 - **Demo video (required, under 3 minutes, English):** recorded from the running app with a scripted browser and English text-to-speech narration, showing the "What 'Working' Looks Like" steps with "the solar system". Details are handled in `6-ship`.
-- **Public repository (required):** code, README with run steps and ARASAAC credit, MIT `LICENSE`, and `devpost/` planning docs. Pictograms are not stored in the repo.
+- **Public repository (required):** code, README with run steps and ARASAAC credit, MIT `LICENSE`, and `devpost/` planning docs. Pictograms are not stored in the repo. **Published 2026-09-30: https://github.com/cristianvega-mx/loter-ia**
 
 ## Look and Feel
 Carried from `prd.md > Look and Feel` and `scope.md > Inspiration & Identity`.
@@ -282,7 +282,7 @@ Cristian's fallback, decided at review. It is not built unless the coverage chec
 **Open issues:**
 - **Board orientation:** "4 × 3" is read as 4 columns by 3 rows on a landscape page. Cristian saw this layout in the build and asked for no change.
 - **Card languages:** Spanish, English, French, Portuguese, German, and Italian, still the PRD's assumption.
-- **Public link:** the subdomain is chosen at deploy time.
+- **Public link:** resolved at deploy time: `loter-ia.za0tzv.easypanel.host`.
 - **Verify first in the build:**
   - Nova's forced-tool output with this key for a Lotería prompt. *(Done in slice 1: works with Nova Pro and Nova 2 Lite.)*
   - That "the solar system" reaches 24 pictograms, plus the Plan B coverage check.

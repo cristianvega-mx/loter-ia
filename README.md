@@ -4,6 +4,8 @@ Turn any class topic into a ready-to-print Lotería (Mexican picture bingo). A t
 
 The name joins *Lotería* and *IA*, Spanish for AI.
 
+**Try it:** https://loter-ia.za0tzv.easypanel.host (a daily limit protects the AI credit, so it may ask you to come back tomorrow).
+
 ## Run it
 
 You need Node.js 24 and an Amazon Bedrock API key with access to Amazon Nova.
