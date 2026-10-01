@@ -11,7 +11,7 @@ Loter-IA has three parts:
 1. **The page** — what the teacher sees in the browser: the start (topic and language), the deck of 24 cards, the download buttons, and the caller.
 2. **The server** — a small program that runs on a computer: Cristian's PC while we build, and his VPS for the public link. It keeps the Amazon key private, asks Amazon's text AI for the concepts, finds a pictogram for each one, and makes the PDF files with the boards and the cards.
 3. **Two outside services:**
-   - **Amazon Nova**, a text AI. It chooses the concepts and writes their names in the teacher's language. It's paid from Cristian's AWS credit, at less than a cent per Lotería.
+   - **Amazon Nova**, a text AI. It chooses the concepts and writes their names in the teacher's language. It's paid from Cristian's AWS credit, at about one cent per Lotería.
    - **ARASAAC**, a free library of 11,000+ pictograms drawn for special education. It needs no key and no account.
 
 An example: the teacher types "the solar system" and picks Spanish.
@@ -56,7 +56,7 @@ PRD ref: `prd.md > The Core Journey`.
   2. Run `npm start`.
   3. Open http://localhost:3000.
   4. Run `npm test` for the tests (no network or key needed).
-  5. Run `npm run coverage` to check pictogram coverage on six school topics with the real services (the Plan B check; a fraction of a cent per topic).
+  5. Run `npm run coverage` to check pictogram coverage on six school topics with the real services (the Plan B check; about a cent per topic).
 - **Public link (Cristian's choice):** a Docker container on the VPS with Traefik labels, like Puente, at a subdomain of the existing wildcard domain (for example `loter-ia.za0tzv.easypanel.host`). The key goes in the container's environment. A daily limit protects the credit; see *Daily Limit*.
 - **Demo video (required, under 3 minutes, English):** recorded from the running app with a scripted browser and English text-to-speech narration, showing the "What 'Working' Looks Like" steps with "the solar system". Details are handled in `6-ship`.
 - **Public repository (required):** code, README with run steps and ARASAAC credit, MIT `LICENSE`, and `devpost/` planning docs. Pictograms are not stored in the repo.
@@ -220,7 +220,7 @@ loteria-bilingue/            # project folder (the public repo can be named lote
   }
   ```
 - **Response:** `output.message.content[]` → the block with `toolUse.input.concepts`.
-- **Cost:** Nova 2 Lite (US inference profile) is about $0.33 per million input tokens and $2.75 per million output tokens (https://cloudprice.net/models/amazon.nova-2-lite-v1%3A0; confirm on AWS's pricing page). A deck takes one to three rounds of two calls of a few thousand tokens each, so under 1 cent. It's paid from the AWS credit because it's Amazon's own model. Pricing: https://aws.amazon.com/bedrock/pricing/
+- **Cost:** Nova 2 Lite (US inference profile) is about $0.33 per million input tokens and $2.75 per million output tokens (https://cloudprice.net/models/amazon.nova-2-lite-v1%3A0; confirm on AWS's pricing page). A deck takes one to three rounds of two calls of a few thousand tokens each. Measured on 2026-09-30 from the token counts Bedrock reports: $0.008 and $0.011 for two decks (two rounds each), and $0.001 to $0.002 for a "more cards" request. It's paid from the AWS credit because it's Amazon's own model. Pricing: https://aws.amazon.com/bedrock/pricing/
 - **Checked 2026-09-30:** the key reaches Nova in `us-east-1`. Nova Canvas image generation is "Legacy" and blocked for this account, which is why it's not used.
 
 ### ARASAAC API (pictograms)

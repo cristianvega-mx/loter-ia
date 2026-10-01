@@ -140,13 +140,20 @@ async function serveStatic(req, res) {
   }
 }
 
+// Past the size limit the rest of the upload is thrown away, so a huge request can't fill the server's memory.
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
+    let tooLarge = false;
     req.setEncoding('utf8');
     req.on('data', chunk => {
+      if (tooLarge) return;
       body += chunk;
-      if (body.length > 20_000) reject(new RequestError('The request is too large.'));
+      if (body.length > 20_000) {
+        tooLarge = true;
+        body = '';
+        reject(new RequestError('The request is too large.'));
+      }
     });
     req.on('end', () => resolve(body));
     req.on('error', reject);

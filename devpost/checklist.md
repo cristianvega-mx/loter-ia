@@ -98,3 +98,6 @@ Activity mode: Recap — a static walkthrough in the chat with links to the sour
 - Boards and cards now download as PDFs made on the server with PDFKit, instead of opening the browser's print window — Cristian asked for one file with all the boards, which is easier to save, send, and take to a print shop. `public/boards.js` moved to `lib/boards.js`, and the print styles were removed.
 - The shuffle moved to `public/shuffle.js` — both the caller in the page and the boards on the server need it, and the page can only load files from `public/`.
 - Nova now says whether a topic is suitable, and the app has a message for topics it refuses — a nonsense topic ("zzzz qqqq xxxx") had produced a full deck, and "weapons and guns" sometimes did too.
+- The cost statements were corrected after measuring real token counts in `6-ship`: a Lotería costs about one US cent (measured $0.008 and $0.011), not "under one cent" — the README, the spec, and the coverage script said less.
+- The license note about the pictograms moved from `LICENSE` to `NOTICE`, so the repository page shows the license as plain MIT — the contest asks for a license that is detectable at the top of the repository.
+- The server now throws away the rest of an upload once it passes the size limit — before, an oversized request was refused but kept filling memory, which matters on a public link.

@@ -1,6 +1,6 @@
 // Checks pictogram coverage for a few school topics with the real services (spec.md > Plan B).
 // If "the solar system" or most of these topics can't reach 24 cards, the build switches to Plan B.
-// Run: npm run coverage   (uses Amazon Nova, a fraction of a cent per topic)
+// Run: npm run coverage   (uses Amazon Nova, about a cent per topic)
 
 import { proposeConcepts, reviewCards } from '../lib/nova.js';
 import { findPictograms } from '../lib/arasaac.js';

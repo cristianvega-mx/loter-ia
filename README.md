@@ -28,7 +28,7 @@ Set these in `.env` (or in the container's environment):
 | `DAILY_DECKS` | Loterías that can be created per day | `100` |
 | `DAILY_MORE` | Extra "Regenerate" requests per day | `300` |
 
-The daily limits protect your AWS credit when the app is on a public link. Creating a Lotería costs under one US cent.
+The daily limits protect your AWS credit when the app is on a public link. Creating a Lotería costs about one US cent.
 
 ## Run it with Docker
 
@@ -50,4 +50,4 @@ Pictograms: Sergio Palao. Origin: [ARASAAC](https://arasaac.org). License: CC (B
 
 ## License
 
-The code is MIT licensed; see [LICENSE](LICENSE).
+The code is MIT licensed; see [LICENSE](LICENSE). The pictograms keep their own license; see [NOTICE](NOTICE).
