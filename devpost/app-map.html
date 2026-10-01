@@ -432,7 +432,7 @@
       <p>What happened in this project:</p>
       <ul>
         <li>The first working step, a deck made from a topic, was built before anything else. It was tried by hand in the browser and by a script that builds real decks for six school topics: <code>scripts/coverage.js</code>, run with <code>npm run coverage</code>.</li>
-        <li>The script showed problems the plan had not predicted: planet Earth drawn as garden soil, a fairy-tale dwarf for “dwarf planet”, lions among the farm animals. The fixes were a different AI model, stricter picture matching (<code>hasKeyword</code> in <code>lib/arasaac.js</code>), and a second look by the AI at every card (<code>reviewCards</code> in <code>lib/nova.js</code>).</li>
+        <li>The script showed problems the plan had not predicted: planet Earth drawn as garden soil, a fairy-tale dwarf for “dwarf planet”, lions among the farm animals. The fixes were a different AI model, stricter picture matching (<code>keywordFor</code> in <code>lib/arasaac.js</code>), and a second look by the AI at every card (<code>reviewCards</code> in <code>lib/nova.js</code>).</li>
         <li>Seeing the app work early also changed the plan for printing. It was going to be the browser's print window; it became one PDF file with all the boards, made in <code>lib/pdf.js</code>.</li>
         <li>Each change is written down with its reason in <code>devpost/checklist.md</code>, under Revisions.</li>
       </ul>
@@ -443,7 +443,7 @@
       <p>Lo que pasó en este proyecto:</p>
       <ul>
         <li>El primer paso que ya funcionaba, una baraja a partir de un tema, se construyó antes que todo lo demás. Se probó a mano en el navegador y con un programa que arma barajas reales de seis temas escolares: <code>scripts/coverage.js</code>, que se corre con <code>npm run coverage</code>.</li>
-        <li>El programa mostró problemas que el plan no había previsto: el planeta Tierra dibujado como tierra de jardín, un enano de cuento para “planeta enano”, leones entre los animales de la granja. Las soluciones fueron otro modelo de IA, una búsqueda de dibujos más estricta (<code>hasKeyword</code> en <code>lib/arasaac.js</code>) y una segunda revisión de la IA a cada carta (<code>reviewCards</code> en <code>lib/nova.js</code>).</li>
+        <li>El programa mostró problemas que el plan no había previsto: el planeta Tierra dibujado como tierra de jardín, un enano de cuento para “planeta enano”, leones entre los animales de la granja. Las soluciones fueron otro modelo de IA, una búsqueda de dibujos más estricta (<code>keywordFor</code> en <code>lib/arasaac.js</code>) y una segunda revisión de la IA a cada carta (<code>reviewCards</code> en <code>lib/nova.js</code>).</li>
         <li>Ver la app funcionando desde temprano también cambió el plan para imprimir. Iba a ser la ventana de impresión del navegador; terminó siendo un solo archivo PDF con todas las tablas, hecho en <code>lib/pdf.js</code>.</li>
         <li>Cada cambio está anotado con su motivo en <code>devpost/checklist.md</code>, en la parte de Revisions.</li>
       </ul>
