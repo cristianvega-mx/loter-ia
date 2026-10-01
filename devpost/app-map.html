@@ -331,16 +331,21 @@
       <li class="stop">
         <h3><span lang="en">Stop 2 · The recipe</span><span lang="es">Parada 2 · La receta</span></h3>
         <p class="find"><code>lib/deck.js</code> <span lang="en">— search for</span><span lang="es">— busca</span> <code>export async function buildDeck</code></p>
-        <p lang="en">The heart of the app. It asks the AI for 36 ideas, looks for pictures of each one, and has the AI review them. The first 24 good cards become the deck; the rest are kept as spares for Regenerate. If 24 are not reached it asks again, up to three rounds. If it still falls short, the teacher is told to try a broader topic.</p>
-        <p lang="es">El corazón de la app. Le pide 36 ideas a la IA, busca dibujos para cada una y hace que la IA las revise. Las primeras 24 cartas buenas forman la baraja; las demás se guardan como repuesto para Regenerate. Si no llega a 24, vuelve a pedir, hasta tres rondas. Si aun así no alcanza, le avisa al maestro que pruebe un tema más amplio.</p>
+        <p lang="en">The heart of the app. It asks the AI for 48 ideas, looks for pictures of each one, and has the AI review them. The first 24 good cards become the deck; the rest are kept as spares for Regenerate. If 24 are not reached it asks for more, up to four rounds, telling the AI which ideas had no picture. If it still falls short, the teacher is told to try a broader topic.</p>
+        <p lang="es">El corazón de la app. Le pide 48 ideas a la IA, busca dibujos para cada una y hace que la IA las revise. Las primeras 24 cartas buenas forman la baraja; las demás se guardan como repuesto para Regenerate. Si no llega a 24, pide más, hasta cuatro rondas, y le dice a la IA qué ideas no tenían dibujo. Si aun así no alcanza, le avisa al maestro que pruebe un tema más amplio.</p>
         <details>
           <summary><span lang="en">See the code</span><span lang="es">Ver el código</span></summary>
 <pre><code>export async function buildDeck({ topic, language }, services) {
   const deck = { topic, language, cards: [], spares: [] };
-  const tried = [];
+  const tried = []; // every idea so far, so none is proposed twice
+  const unpictured = []; // the ideas the picture library didn't have
   for (let round = 0; round &lt; ROUNDS &amp;&amp; deck.cards.length &lt; DECK_SIZE; round++) {
     const ideasSoFar = tried.length;
-    const fresh = await newCards({ topic, language, count: CANDIDATES, avoid: [...tried], existing: allCards(deck) }, services, tried);
+    // A later round only has to fill the last few cards, and tells the AI which ideas had no picture.
+    const request = round === 0
+      ? { count: CANDIDATES, avoid: [] }
+      : { count: FILL_CANDIDATES, avoid: [...tried], unpictured: [...unpictured] };
+    const fresh = await newCards({ topic, language, ...request, existing: allCards(deck) }, services, tried, unpictured);
     for (const card of fresh) (deck.cards.length &lt; DECK_SIZE ? deck.cards : deck.spares).push(card);
     if (tried.length === ideasSoFar) break; // no ideas at all (a nonsense topic): asking again won't help
   }

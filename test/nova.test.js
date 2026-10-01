@@ -24,7 +24,26 @@ test('asks Nova through a forced tool, with the key as a bearer token', async ()
   assert.equal(url, 'https://bedrock-runtime.us-east-1.amazonaws.com/model/us.amazon.nova-2-lite-v1%3A0/converse');
   assert.equal(headers.Authorization, 'Bearer test-key');
   assert.deepEqual(body.toolConfig.toolChoice, { tool: { name: 'propose_concepts' } });
-  assert.match(body.messages[0].content[0].text, /Topic: the solar system\nLanguage: Spanish\nHow many: 36\nAvoid: Marte/);
+  assert.match(body.messages[0].content[0].text, /Topic: the solar system\nCard language: Spanish \(write every name in Spanish\)\nHow many: 36\nAvoid: Marte/);
+});
+
+test('a later round tells Nova which ideas had no picture', async () => {
+  const { fetch, requests } = fakeBedrock({ suitable: true, concepts: [] });
+  await proposeConcepts({ topic: 'space', language: 'English', count: 24, avoid: ['The Sun', 'The Quasar'], unpictured: ['The Quasar'] }, { fetch, env });
+  assert.match(requests[0].body.messages[0].content[0].text, /How many: 24\nAvoid: The Sun; The Quasar\nNo picture exists for: The Quasar$/);
+});
+
+test('English titles get "The" instead of "A" or "An"; other languages are left alone', async () => {
+  const proposed = fakeBedrock({ suitable: true, concepts: [{ name: 'A Comet', search: ['comet'] }, { name: 'an Astronaut', search: ['astronaut'] }, { name: 'The Sun', search: ['sun'] }, { name: 'Mars', search: ['mars'] }] });
+  const english = await proposeConcepts({ topic: 'space', language: 'English', count: 36 }, { fetch: proposed.fetch, env });
+  assert.deepEqual(english.map(concept => concept.name), ['The Comet', 'The Astronaut', 'The Sun', 'Mars']);
+
+  const candidates = [{ name: 'A Comet', options: [{ term: 'comet', about: '' }] }];
+  const reviewed = fakeBedrock({ cards: [{ number: 1, keep: true, picture: 1, name: 'A Comet' }] });
+  assert.equal((await reviewCards({ topic: 'space', language: 'English', candidates }, { fetch: reviewed.fetch, env }))[0].name, 'The Comet');
+
+  const galician = fakeBedrock({ suitable: true, concepts: [{ name: 'A Coruña', search: ['city'] }] });
+  assert.equal((await proposeConcepts({ topic: 'cities', language: 'Spanish', count: 36 }, { fetch: galician.fetch, env }))[0].name, 'A Coruña');
 });
 
 test('refuses a topic the AI judges unsuitable or nonsense', async () => {

@@ -49,13 +49,18 @@ test('drops concepts without a pictogram and repeated names or pictograms', asyn
   assert.ok(!names.includes('el sol') && !names.includes('Moonlight') && !names.includes('Agujero negro'));
 });
 
-test('asks once more, avoiding what it already tried, when the first round is short', async () => {
+test('asks once more when the first round is short, saying what it tried and what had no picture', async () => {
   const { propose, calls } = fakePropose();
-  const find = fakeFind(word => number(word) <= 36 && number(word) % 2 === 0);
+  const find = fakeFind(word => number(word) <= 48 && number(word) % 3 !== 0); // only 16 of the first 48 have a picture
   const deck = await buildDeck({ topic: 'farm animals', language: 'English' }, { propose, find });
   assert.equal(calls.length, 2);
-  assert.equal(calls[1].avoid.length, 36);
-  assert.ok(calls[1].avoid.includes('Thing 2'));
+  assert.equal(calls[0].count, 48);
+  assert.deepEqual(calls[0].avoid, []);
+  assert.equal(calls[1].count, 24);
+  assert.equal(calls[1].avoid.length, 48);
+  assert.ok(calls[1].avoid.includes('Thing 3'));
+  assert.equal(calls[1].unpictured.length, 32);
+  assert.ok(calls[1].unpictured.includes('Thing 2') && !calls[1].unpictured.includes('Thing 3'));
   assert.equal(deck.cards.length, DECK_SIZE);
 });
 
@@ -118,14 +123,14 @@ test('skips a concept whose picture lookup fails, but reports a picture service 
   await assert.rejects(buildDeck({ topic: 'things', language: 'English' }, { propose, find: down }), /ARASAAC answered 503/);
 });
 
-test('says the topic is too narrow when three rounds are not enough', async () => {
+test('says the topic is too narrow when four rounds are not enough', async () => {
   const { propose, calls } = fakePropose();
-  const find = fakeFind(word => number(word) % 5 !== 0); // only 1 in 5 has a pictogram
+  const find = fakeFind(word => number(word) % 6 !== 0); // only 1 in 6 has a pictogram
   await assert.rejects(
     buildDeck({ topic: 'quantum chromodynamics', language: 'English' }, { propose, find }),
     error => error instanceof DeckError && error.code === 'too-narrow',
   );
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, 4);
 });
 
 test('more cards never repeat a name or pictogram the page has already seen', async () => {

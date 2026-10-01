@@ -16,7 +16,7 @@ Loter-IA has three parts:
 
 An example: the teacher types "the solar system" and picks Spanish.
 1. The page sends that to the server.
-2. The server asks Nova for about 36 ideas, each with a Spanish card name like "Saturno" and an English search word like "Saturn".
+2. The server asks Nova for about 48 ideas, each with a Spanish card name like "Saturno" and an English search word like "Saturn".
 3. For each idea, the server asks ARASAAC for the matching pictogram, using the English word because it is less ambiguous ("cometa" is both a comet and a kite in Spanish).
 4. It keeps the first 24 ideas that have a pictogram and holds the rest as spares for the "regenerate" button.
 5. The page shows the 24 cards.
@@ -29,10 +29,10 @@ Why this shape: there is nothing to store, so there is no database. The pictogra
 PRD ref: `prd.md > The Core Journey`.
 
 1. **Topic and language.** The teacher types a topic and picks a language on the Start view. The page checks that the topic isn't empty, then sends `POST /api/deck {topic, language}` and shows "Creating your Lotería…".
-2. **Choosing concepts.** The server checks the daily limit, then asks Nova for about 36 candidate concepts through the Converse API with a forced tool, `propose_concepts`. Each candidate has a card name in the chosen language and two or three English search terms.
+2. **Choosing concepts.** The server checks the daily limit, then asks Nova for about 48 candidate concepts through the Converse API with a forced tool, `propose_concepts`. Each candidate has a card name in the chosen language and two or three English search terms.
 3. **Finding pictograms.** For each candidate, the server calls ARASAAC's exact search (`bestsearch`), then the broad search if that finds nothing, keeping only pictograms that carry the term as a keyword. It collects up to three picture options with ARASAAC's own description of each (keywords, meaning, categories), because words have several meanings ("earth" is garden soil and the planet). It runs at most 6 lookups at a time, retries a failed lookup once, and drops pictograms marked as violent or sexual.
 4. **Reviewing the cards.** Nova gets a second look through a forced tool, `review_cards`. For each candidate it picks the picture option that shows the title's meaning in this topic, drops misfits (off-topic, unsuitable, no fitting picture), and corrects the name (spelling, accents, article, gender). *(Added in the build; see checklist Revisions.)*
-5. **Assembling the deck.** The first 24 reviewed cards with distinct names and pictograms become the deck and the rest become spares. If fewer than 24 are ready, the server asks Nova again, excluding the ideas it already tried, up to three rounds in total. If there are still fewer than 24, it answers with the "topic too narrow" error.
+5. **Assembling the deck.** The first 24 reviewed cards with distinct names and pictograms become the deck and the rest become spares. If fewer than 24 are ready, the server asks Nova for 24 more ideas, telling it which ideas it already tried and which ones had no picture, up to four rounds in total. If there are still fewer than 24, it answers with the "topic too narrow" error.
 6. **Showing the deck.** The page shows 24 cards. Each card's image loads straight from ARASAAC (`static.arasaac.org`), with the name printed in a band below it.
 7. **Regenerating a card.** The page swaps that card for the next spare instantly. When the spares run out, it asks `POST /api/more {topic, language, exclude}` for more.
 8. **Boards.** The teacher enters how many boards, from 1 to 60, and presses "Download boards (PDF)". The page sends the deck to `POST /api/boards.pdf`; `lib/boards.js` builds that many boards of 12 different cards each, no two with the same set of cards, and `lib/pdf.js` draws one board per landscape letter page. The browser saves the file. *(Changed in the build, at Cristian's request: a PDF download instead of the print window.)*
@@ -90,7 +90,7 @@ PRD ref: `prd.md > Creating the Lotería`, `prd.md > Regenerating a Card`, `prd.
 - right for a classroom and all different from each other;
 - names in the chosen language, with the natural article in the style of classic Lotería;
 - one to three simple English search words (singular nouns first);
-- nothing from the exclude list.
+- nothing from the exclude list, and simple everyday things when it is told that some ideas had no picture.
 
 It returns `[{name, search}]`.
 
@@ -106,7 +106,7 @@ PRD ref: `prd.md > Creating the Lotería`, `prd.md > Look and Feel`.
 - runs the candidates through the finder, at most 6 at a time (one failed lookup only loses that concept; if most fail, it reports the picture service as down);
 - has the reviewer choose each card's picture, drop misfits, and fix names (if the review fails, the cards keep their first picture);
 - keeps 24 cards with distinct names and pictograms and holds the rest as spares;
-- asks for more, up to three rounds, if short;
+- asks for more if short, up to four rounds, telling the picker which ideas had no picture;
 - reports "topic too narrow" when it still can't reach 24.
 
 PRD ref: `prd.md > Creating the Lotería`, `prd.md > Regenerating a Card`.
@@ -201,8 +201,8 @@ loteria-bilingue/            # project folder (the public repo can be named lote
   ```json
   {
     "system": [{ "text": "<rules for Lotería concepts>" }],
-    "messages": [{ "role": "user", "content": [{ "text": "Topic: the solar system\nLanguage: Spanish\nHow many: 36\nAvoid: <names already tried>" }] }],
-    "inferenceConfig": { "maxTokens": 2500, "temperature": 0.7 },
+    "messages": [{ "role": "user", "content": [{ "text": "Topic: the solar system\nCard language: Spanish (write every name in Spanish)\nHow many: 48" }] }],
+    "inferenceConfig": { "maxTokens": 4000, "temperature": 0.3 },
     "toolConfig": {
       "tools": [{ "toolSpec": {
         "name": "propose_concepts",
@@ -219,6 +219,7 @@ loteria-bilingue/            # project folder (the public repo can be named lote
     }
   }
   ```
+- **Later rounds** ask for 24 and add two lines to that text: `Avoid: <names already tried>` and `No picture exists for: <names without a pictogram>`.
 - **Response:** `output.message.content[]` → the block with `toolUse.input.concepts`.
 - **Cost:** Nova 2 Lite (US inference profile) is about $0.33 per million input tokens and $2.75 per million output tokens (https://cloudprice.net/models/amazon.nova-2-lite-v1%3A0; confirm on AWS's pricing page). A deck takes one to three rounds of two calls of a few thousand tokens each. Measured on 2026-09-30 from the token counts Bedrock reports: $0.008 and $0.011 for two decks (two rounds each), and $0.001 to $0.002 for a "more cards" request. It's paid from the AWS credit because it's Amazon's own model. Pricing: https://aws.amazon.com/bedrock/pricing/
 - **Checked 2026-09-30:** the key reaches Nova in `us-east-1`. Nova Canvas image generation is "Legacy" and blocked for this account, which is why it's not used.
@@ -271,7 +272,7 @@ Cristian's fallback, decided at review. It is not built unless the coverage chec
 
 **Implementation details derived by the agent:**
 - Node 24 plain JavaScript; PDFKit is the only dependency.
-- About 36 candidates per deck, English searches with the exact match first, and the violence and sex filters.
+- About 48 candidates per deck and 24 more in each later round, English searches with the exact match first, and the violence and sex filters.
 - A 1–60 range for boards.
 - One board per landscape page and 8 cards per landscape page.
 - Daily limits of 100 decks and 300 "more" requests.
