@@ -34,9 +34,9 @@ test('a later round tells Nova which ideas had no picture', async () => {
 });
 
 test('English titles get "The" instead of "A" or "An"; other languages are left alone', async () => {
-  const proposed = fakeBedrock({ suitable: true, concepts: [{ name: 'A Comet', search: ['comet'] }, { name: 'an Astronaut', search: ['astronaut'] }, { name: 'The Sun', search: ['sun'] }, { name: 'Mars', search: ['mars'] }] });
+  const proposed = fakeBedrock({ suitable: true, concepts: [{ name: 'A Comet', search: ['comet'] }, { name: 'an Astronaut', search: ['astronaut'] }, { name: 'The Sun', search: ['sun'] }, { name: 'Mars', search: ['mars'] }, { name: 'The Venus', search: ['venus'] }, { name: 'The Mars Rover', search: ['rover'] }] });
   const english = await proposeConcepts({ topic: 'space', language: 'English', count: 36 }, { fetch: proposed.fetch, env });
-  assert.deepEqual(english.map(concept => concept.name), ['The Comet', 'The Astronaut', 'The Sun', 'Mars']);
+  assert.deepEqual(english.map(concept => concept.name), ['The Comet', 'The Astronaut', 'The Sun', 'Mars', 'Venus', 'The Mars Rover']); // planets take no article
 
   const candidates = [{ name: 'A Comet', options: [{ term: 'comet', about: '' }] }];
   const reviewed = fakeBedrock({ cards: [{ number: 1, keep: true, picture: 1, name: 'A Comet' }] });
@@ -77,6 +77,14 @@ test('the review returns one verdict per card, in order, with a valid picture nu
     { keep: true, name: 'Marte', picture: 1 },
   ]);
   assert.match(requests[0].body.messages[0].content[0].text, /1\. La Tierra\n   picture 1: earth — ground \(agriculture\)\n   picture 2: earth — The Earth \(astronomy\)/);
+});
+
+test('the review is told when the titles are the library\'s raw keywords', async () => {
+  const candidates = [{ name: 'planet', options: [{ term: 'planet', about: 'planet (astronomy)' }] }];
+  const { fetch, requests } = fakeBedrock({ cards: [{ number: 1, keep: true, picture: 1, name: 'El Planeta' }] });
+  const verdicts = await reviewCards({ topic: 'the solar system', language: 'Spanish', candidates, keywords: true }, { fetch, env });
+  assert.equal(verdicts[0].name, 'El Planeta');
+  assert.match(requests[0].body.messages[0].content[0].text, /Card language: Spanish\nThese titles are the picture library's own English keywords\. .* as a card title in Spanish, .*\nCards:\n1\. planet/);
 });
 
 test('a card the review skipped gets no verdict', async () => {

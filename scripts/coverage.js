@@ -3,7 +3,7 @@
 // Run: npm run coverage   (uses Amazon Nova, about a cent per topic)
 
 import { proposeConcepts, reviewCards } from '../lib/nova.js';
-import { findPictograms } from '../lib/arasaac.js';
+import { browsePictograms, findPictograms } from '../lib/arasaac.js';
 import { buildDeck, DeckError } from '../lib/deck.js';
 
 const TOPICS = process.argv.slice(2).length
@@ -14,7 +14,7 @@ let complete = 0;
 for (const topic of TOPICS) {
   const started = Date.now();
   try {
-    const deck = await buildDeck({ topic, language: 'Spanish' }, { propose: proposeConcepts, find: findPictograms, review: reviewCards });
+    const deck = await buildDeck({ topic, language: 'Spanish' }, { propose: proposeConcepts, find: findPictograms, review: reviewCards, browse: browsePictograms });
     complete++;
     const seconds = ((Date.now() - started) / 1000).toFixed(1);
     console.log(`\n${topic}: ${deck.cards.length} cards + ${deck.spares.length} spares in ${seconds}s`);

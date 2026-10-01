@@ -5,7 +5,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { proposeConcepts, reviewCards } from './lib/nova.js';
-import { findPictograms } from './lib/arasaac.js';
+import { browsePictograms, findPictograms } from './lib/arasaac.js';
 import { buildDeck, moreCards, DeckError } from './lib/deck.js';
 import { boardsPdf, cardsPdf } from './lib/pdf.js';
 import { BOARD_SIZE, MAX_BOARDS } from './lib/boards.js';
@@ -20,7 +20,7 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml',
 };
-const services = { propose: proposeConcepts, find: findPictograms, review: reviewCards };
+const services = { propose: proposeConcepts, find: findPictograms, review: reviewCards, browse: browsePictograms };
 // Only the requests that use the AI count toward the daily limit; the PDFs cost nothing.
 const countToday = createLimiter({ decks: Number(process.env.DAILY_DECKS) || 100, more: Number(process.env.DAILY_MORE) || 300 });
 

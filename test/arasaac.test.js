@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { findPictograms, imageUrl } from '../lib/arasaac.js';
+import { browsePictograms, findPictograms, imageUrl } from '../lib/arasaac.js';
 
 // Fake fetch that answers by URL and records what was asked.
 function fakeFetch(answers) {
@@ -20,8 +20,22 @@ const ids = options => options.map(option => option.pictogramId);
 
 test('uses the exact-match search first', async () => {
   const { fetch, asked } = fakeFetch({ 'bestsearch/comet': [pictogram(2711, 'comet')] });
-  assert.deepEqual(await findPictograms(['comet'], { fetch }), [{ pictogramId: 2711, image: imageUrl(2711), term: 'comet', about: 'comet' }]);
+  assert.deepEqual(await findPictograms(['comet'], { fetch }), [{ pictogramId: 2711, image: imageUrl(2711), term: 'comet', about: 'comet', shelves: [] }]);
   assert.deepEqual(asked, ['bestsearch/comet']);
+});
+
+test('browses a shelf of the library: its pictures, titled with their first keyword', async () => {
+  const comet = { _id: 2711, keywords: [{ keyword: 'comet' }], categories: ['astronomy'], tags: ['astronomy', 'core vocabulary'] };
+  const classroom = { _id: 9001, keywords: [{ keyword: 'classroom' }], categories: ['school'], tags: ['space'] }; // found by its tag, but on another shelf
+  const phrase = { _id: 9002, keywords: [{ keyword: 'is it a star?' }], categories: ['astronomy'] };
+  const scary = { _id: 9003, keywords: [{ keyword: 'explosion' }], categories: ['astronomy'], violence: true };
+  const nameless = { _id: 9004, keywords: [], categories: ['astronomy'] };
+  const { fetch, asked } = fakeFetch({ 'search/astronomy': [comet, classroom, phrase, scary, nameless] });
+  assert.deepEqual(await browsePictograms('astronomy', { fetch }), [
+    { pictogramId: 2711, image: imageUrl(2711), term: 'comet', about: 'comet — (astronomy)', shelves: ['astronomy'] },
+  ]);
+  assert.deepEqual(asked, ['search/astronomy']);
+  assert.deepEqual(await browsePictograms('nothing here', { fetch }), []);
 });
 
 test('falls back to the broad search, then to the next term', async () => {

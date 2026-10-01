@@ -36,6 +36,7 @@ test('drops concepts without a pictogram and repeated names or pictograms', asyn
   const propose = async () => [
     { name: 'El Sol', search: ['sun'] },
     { name: 'el sol', search: ['sun'] }, // same name, different case
+    { name: 'Sol', search: ['sunny'] }, // same name without its article, even with another picture
     { name: 'La Luna', search: ['moon'] },
     { name: 'Moonlight', search: ['moon'] }, // same pictogram as La Luna
     { name: 'Agujero negro', search: ['black hole'] }, // no pictogram
@@ -46,7 +47,7 @@ test('drops concepts without a pictogram and repeated names or pictograms', asyn
   const deck = await buildDeck({ topic: 'space', language: 'Spanish' }, { propose, find });
   const names = deck.cards.map(card => card.name);
   assert.deepEqual(names.slice(0, 3), ['El Sol', 'La Luna', 'Planet 0']);
-  assert.ok(!names.includes('el sol') && !names.includes('Moonlight') && !names.includes('Agujero negro'));
+  assert.ok(!names.includes('el sol') && !names.includes('Sol') && !names.includes('Moonlight') && !names.includes('Agujero negro'));
 });
 
 test('asks once more when the first round is short, saying what it tried and what had no picture', async () => {
@@ -62,6 +63,46 @@ test('asks once more when the first round is short, saying what it tried and wha
   assert.equal(calls[1].unpictured.length, 32);
   assert.ok(calls[1].unpictured.includes('Thing 2') && !calls[1].unpictured.includes('Thing 3'));
   assert.equal(deck.cards.length, DECK_SIZE);
+});
+
+test('fills in from the picture library\'s own shelves before asking the AI again', async () => {
+  const { propose, calls } = fakePropose();
+  // Only 20 of the 48 ideas have a picture; all of those sit on the "astronomy" shelf.
+  const find = async words => (number(words[0]) > 20 ? [] : [{ pictogramId: number(words[0]), image: 'x.png', term: words[0], about: '', shelves: ['astronomy'] }]);
+  const browsed = [];
+  const browse = async shelf => {
+    browsed.push(shelf);
+    return [
+      { pictogramId: 5, image: 'x.png', term: 'thing5 again', about: '', shelves: ['astronomy'] }, // already on a card
+      ...Array.from({ length: 8 }, (_, i) => ({ pictogramId: 100 + i, image: 'shelf.png', term: `shelf ${i}`, about: '', shelves: ['astronomy'] })),
+    ];
+  };
+  const review = async ({ candidates }) =>
+    candidates.map(candidate => ({ keep: candidate.name !== 'shelf 7', name: candidate.name.replace('shelf', 'El Estante'), picture: 1 }));
+  const deck = await buildDeck({ topic: 'the solar system', language: 'Spanish' }, { propose, find, review, browse });
+  assert.equal(calls.length, 1); // the shelf was enough: no second round of ideas
+  assert.deepEqual(browsed, ['astronomy']);
+  assert.equal(deck.cards.length, DECK_SIZE);
+  assert.deepEqual(deck.cards.slice(20).map(card => card.name), ['El Estante 0', 'El Estante 1', 'El Estante 2', 'El Estante 3']);
+  assert.deepEqual(deck.spares.map(card => card.name), ['El Estante 4', 'El Estante 5', 'El Estante 6']); // "shelf 7" was dropped by the review
+  assert.equal(new Set([...deck.cards, ...deck.spares].map(card => card.pictogramId)).size, 27);
+
+  // In English a common noun from the library gets "The" even when the review left it bare; a proper name doesn't.
+  const englishBrowse = async () => [
+    { pictogramId: 200, image: 'x.png', term: 'planet', about: '', shelves: ['astronomy'] },
+    { pictogramId: 201, image: 'x.png', term: 'Mars', about: '', shelves: ['astronomy'] },
+    { pictogramId: 202, image: 'x.png', term: 'full moon', about: '', shelves: ['astronomy'] },
+    { pictogramId: 203, image: 'x.png', term: 'comet', about: '', shelves: ['astronomy'] },
+  ];
+  const titles = { planet: 'Planet', Mars: 'Mars', 'full moon': 'The Full Moon', comet: 'Comet' };
+  const englishReview = async ({ candidates }) => candidates.map(candidate => ({ keep: true, name: titles[candidate.name] ?? candidate.name, picture: 1 }));
+  const english = await buildDeck({ topic: 'the solar system', language: 'English' }, { propose: fakePropose().propose, find, review: englishReview, browse: englishBrowse });
+  assert.deepEqual(english.cards.slice(20).map(card => card.name), ['The Planet', 'Mars', 'The Full Moon', 'The Comet']);
+
+  // Without a review nobody can title the library's English keywords, so the shelves are left alone.
+  const second = fakePropose();
+  await assert.rejects(buildDeck({ topic: 'the solar system', language: 'Spanish' }, { propose: second.propose, find, browse }), DeckError);
+  assert.equal(browsed.length, 1);
 });
 
 test('applies the review: drops rejected cards, fixes names, and skips names that become repeats', async () => {

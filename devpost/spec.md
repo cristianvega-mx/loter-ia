@@ -32,7 +32,7 @@ PRD ref: `prd.md > The Core Journey`.
 2. **Choosing concepts.** The server checks the daily limit, then asks Nova for about 48 candidate concepts through the Converse API with a forced tool, `propose_concepts`. Each candidate has a card name in the chosen language and two or three English search terms.
 3. **Finding pictograms.** For each candidate, the server calls ARASAAC's exact search (`bestsearch`), then the broad search if that finds nothing, keeping only pictograms that carry the term as a keyword. It collects up to three picture options with ARASAAC's own description of each (keywords, meaning, categories), because words have several meanings ("earth" is garden soil and the planet). It runs at most 6 lookups at a time, retries a failed lookup once, and drops pictograms marked as violent or sexual.
 4. **Reviewing the cards.** Nova gets a second look through a forced tool, `review_cards`. For each candidate it picks the picture option that shows the title's meaning in this topic, drops misfits (off-topic, unsuitable, no fitting picture), and corrects the name (spelling, accents, article, gender). *(Added in the build; see checklist Revisions.)*
-5. **Assembling the deck.** The first 24 reviewed cards with distinct names and pictograms become the deck and the rest become spares. If fewer than 24 are ready, the server asks Nova for 24 more ideas, telling it which ideas it already tried and which ones had no picture, up to four rounds in total. If there are still fewer than 24, it answers with the "topic too narrow" error.
+5. **Assembling the deck.** The first 24 reviewed cards with distinct names and pictograms become the deck and the rest become spares. If fewer than 24 are ready, the server first looks at what the picture library itself has for the topic: it takes the library categories ("shelves") that many of the accepted pictures share, such as "astronomy", lists the pictograms on those shelves, and has Nova review them and write their titles in the card language. If cards are still missing, it asks Nova for 24 more ideas, telling it which ideas it already tried and which ones had no picture, up to four rounds in total. If there are still fewer than 24, it answers with the "topic too narrow" error.
 6. **Showing the deck.** The page shows 24 cards. Each card's image loads straight from ARASAAC (`static.arasaac.org`), with the name printed in a band below it.
 7. **Regenerating a card.** The page swaps that card for the next spare instantly. When the spares run out, it asks `POST /api/more {topic, language, exclude}` for more.
 8. **Boards.** The teacher enters how many boards, from 1 to 60, and presses "Download boards (PDF)". The page sends the deck to `POST /api/boards.pdf`; `lib/boards.js` builds that many boards of 12 different cards each, no two with the same set of cards, and `lib/pdf.js` draws one board per landscape letter page. The browser saves the file. *(Changed in the build, at Cristian's request: a PDF download instead of the print window.)*
@@ -98,7 +98,7 @@ It returns `[{name, search}]`.
 PRD ref: `prd.md > Creating the Lotería`.
 
 ### Pictogram Finder
-`lib/arasaac.js`. For each English search term it tries the exact search, then the broad search, and keeps only pictograms that carry the term as a keyword. It skips pictograms marked `violence` or `sex`, retries a failed lookup once, and returns up to three options `{pictogramId, image, term, about}`, where `about` is ARASAAC's description of the picture. An empty list means no picture.
+`lib/arasaac.js`. For each English search term it tries the exact search, then the broad search, and keeps only pictograms that carry the term as a keyword. It skips pictograms marked `violence` or `sex`, retries a failed lookup once, and returns up to three options `{pictogramId, image, term, about, shelves}`, where `about` is ARASAAC's description of the picture and `shelves` are the categories and tags the library files it under. An empty list means no picture. `browsePictograms(shelf)` lists every pictogram on one shelf, each titled with the library's own English keyword.
 PRD ref: `prd.md > Creating the Lotería`, `prd.md > Look and Feel`.
 
 ### Deck Builder
@@ -106,7 +106,8 @@ PRD ref: `prd.md > Creating the Lotería`, `prd.md > Look and Feel`.
 - runs the candidates through the finder, at most 6 at a time (one failed lookup only loses that concept; if most fail, it reports the picture service as down);
 - has the reviewer choose each card's picture, drop misfits, and fix names (if the review fails, the cards keep their first picture);
 - keeps 24 cards with distinct names and pictograms and holds the rest as spares;
-- asks for more if short, up to four rounds, telling the picker which ideas had no picture;
+- if short, fills in from the library's own shelves: the categories shared by at least 30% of the accepted pictures (three at most) are listed, up to 40 unused pictograms go through the review, and the ones it keeps become cards with titles in the card language;
+- if still short, asks for more ideas, up to four rounds, telling the picker which ideas had no picture;
 - reports "topic too narrow" when it still can't reach 24.
 
 PRD ref: `prd.md > Creating the Lotería`, `prd.md > Regenerating a Card`.
