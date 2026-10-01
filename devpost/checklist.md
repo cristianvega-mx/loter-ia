@@ -49,7 +49,7 @@ Build mode: fast
   Learner check: Press "Call cards", swipe or scroll through a few cards and back, then go to the end.
   Commit: `Call cards on screen`
 
-- [ ] **5. Friendly messages and a daily limit**
+- [x] **5. Friendly messages and a daily limit**
   Becomes usable:
   - Clear messages for an empty topic, a topic too narrow, and failures, with "Try again" keeping the topic.
   - A card whose picture fails to load shows its name on its color.
@@ -94,3 +94,4 @@ Activity mode: [live app and editor, explicit static fallback, focused alternati
 - Added `scripts/coverage.js` (`npm run coverage`) as the Plan B check — all six school topics reached 24 cards, so Plan B (Cloudflare drawings) is not needed.
 - Boards and cards now download as PDFs made on the server with PDFKit, instead of opening the browser's print window — Cristian asked for one file with all the boards, which is easier to save, send, and take to a print shop. `public/boards.js` moved to `lib/boards.js`, and the print styles were removed.
 - The shuffle moved to `public/shuffle.js` — both the caller in the page and the boards on the server need it, and the page can only load files from `public/`.
+- Nova now says whether a topic is suitable, and the app has a message for topics it refuses — a nonsense topic ("zzzz qqqq xxxx") had produced a full deck, and "weapons and guns" sometimes did too.

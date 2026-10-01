@@ -9,6 +9,7 @@ import { findPictograms } from './lib/arasaac.js';
 import { buildDeck, moreCards, DeckError } from './lib/deck.js';
 import { boardsPdf, cardsPdf } from './lib/pdf.js';
 import { BOARD_SIZE, MAX_BOARDS } from './lib/boards.js';
+import { createLimiter, LimitError } from './lib/limit.js';
 
 const PUBLIC = join(import.meta.dirname, 'public');
 const LANGUAGES = ['Spanish', 'English', 'French', 'Portuguese', 'German', 'Italian'];
@@ -20,6 +21,8 @@ const TYPES = {
   '.svg': 'image/svg+xml',
 };
 const services = { propose: proposeConcepts, find: findPictograms, review: reviewCards };
+// Only the requests that use the AI count toward the daily limit; the PDFs cost nothing.
+const countToday = createLimiter({ decks: Number(process.env.DAILY_DECKS) || 100, more: Number(process.env.DAILY_MORE) || 300 });
 
 class RequestError extends Error {}
 
@@ -27,13 +30,21 @@ class RequestError extends Error {}
 const api = {
   '/api/deck': {
     failure: 'Something went wrong while creating your Lotería.',
-    run: async body => buildDeck(readDeckRequest(body), services),
+    run: async body => {
+      const request = readDeckRequest(body);
+      countToday('decks');
+      return buildDeck(request, services);
+    },
   },
   // More cards for "Regenerate" once the spares run out. `existing` lists every card the page
   // has seen for this deck (cards, spares, and swapped-out cards) so none comes back.
   '/api/more': {
     failure: "Couldn't get a new card. Try again.",
-    run: async body => ({ cards: await moreCards({ ...readDeckRequest(body), existing: readExisting(body.existing) }, services) }),
+    run: async body => {
+      const request = { ...readDeckRequest(body), existing: readExisting(body.existing) };
+      countToday('more');
+      return { cards: await moreCards(request, services) };
+    },
   },
   '/api/boards.pdf': {
     failure: "Couldn't make the PDF. Try again.",
@@ -99,8 +110,13 @@ async function handleApi(req, res, route) {
   } catch (error) {
     if (error instanceof SyntaxError || error instanceof RequestError) {
       sendJson(res, 400, { error: 'bad-request', message: error instanceof RequestError ? error.message : 'The request was not valid.' });
+    } else if (error instanceof LimitError) {
+      sendJson(res, 429, { error: 'limit', message: "Loter-IA has reached today's limit. Please try again tomorrow." });
     } else if (error instanceof DeckError) {
-      sendJson(res, 422, { error: error.code, message: "This topic doesn't have enough pictures yet. Try a broader topic." });
+      const message = error.code === 'unsuitable'
+        ? "Loter-IA can't make a Lotería for this topic. Try a different one."
+        : "This topic doesn't have enough pictures yet. Try a broader topic.";
+      sendJson(res, 422, { error: error.code, message });
     } else {
       console.error(`${req.url} failed:`, error.message);
       sendJson(res, 502, { error: 'upstream', message: route.failure });

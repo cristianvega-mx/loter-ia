@@ -15,6 +15,28 @@ npm start                 # open http://localhost:3000
 npm test                  # runs the tests; no network or key needed
 ```
 
+## Settings
+
+Set these in `.env` (or in the container's environment):
+
+| Setting | What it does | Default |
+|---|---|---|
+| `AWS_BEARER_TOKEN_BEDROCK` | Amazon Bedrock API key | none (required) |
+| `AWS_REGION` | AWS region for Bedrock | `us-east-1` |
+| `NOVA_MODEL_ID` | Text model that picks and reviews the cards | `us.amazon.nova-2-lite-v1:0` |
+| `PORT` | Port for the web server | `3000` |
+| `DAILY_DECKS` | Loterías that can be created per day | `100` |
+| `DAILY_MORE` | Extra "Regenerate" requests per day | `300` |
+
+The daily limits protect your AWS credit when the app is on a public link. Creating a Lotería costs under one US cent.
+
+## Run it with Docker
+
+```bash
+docker build -t loter-ia .
+docker run -p 3000:3000 --env-file .env loter-ia
+```
+
 ## How it works
 
 - **The page** (`public/`) is where the teacher types the topic, sees the cards, swaps the ones they don't like, and downloads the PDFs.

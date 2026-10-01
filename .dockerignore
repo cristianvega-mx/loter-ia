@@ -1,0 +1,11 @@
+# Keep secrets, tools, and planning files out of the image.
+.env
+.env.*
+.git
+node_modules
+devpost
+test
+scripts
+agent
+.agents
+.claude

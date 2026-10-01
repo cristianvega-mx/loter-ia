@@ -84,7 +84,7 @@ Source: `scope.md > The Core Loop`.
 
 - **First use** — the start asks only for a topic and a language; no sign-in.
 - **Creating** — while the AI makes the cards, the teacher sees that it's working.
-- **A topic that can't be used** — if the topic is empty, or there aren't 24 concepts for it, Loter-IA says so plainly and asks for a different or broader topic. (Assumption.)
+- **A topic that can't be used** — if the topic is empty, or there aren't 24 concepts for it, Loter-IA says so plainly and asks for a different or broader topic. A nonsense topic, or one that isn't for a classroom, gets its own message asking for a different topic. (Assumption.)
 - **Something fails while creating** — the teacher sees a clear message and can try again without retyping the topic. (Assumption.)
 - **End of the deck** — after the last card, the caller says all 24 cards have been called. (Assumption.)
 - **Closing the page** — nothing is saved; closing the page ends that Lotería. (Assumption, accepted in review.)

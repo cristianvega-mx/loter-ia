@@ -34,11 +34,14 @@ $('start-form').addEventListener('submit', async event => {
   } catch (error) {
     state.deck = null;
     $('deck').hidden = true;
-    showStatus(error.message, true);
+    showStatus(error.message, true, error.canRetry);
   } finally {
     setBusy(false);
   }
 });
+
+// "Try again" repeats the request with the topic still in the box.
+$('retry').addEventListener('click', () => $('start-form').requestSubmit());
 
 $('cards').addEventListener('click', event => {
   const button = event.target.closest('.regen');
@@ -86,16 +89,10 @@ function openCaller() {
     const big = document.createElement('div');
     big.className = 'big-card';
     big.style.setProperty('--card-color', COLORS[cards.indexOf(card) % COLORS.length]);
-    const art = document.createElement('div');
-    art.className = 'art';
-    const image = document.createElement('img');
-    image.src = card.image;
-    image.alt = '';
-    art.append(image);
     const name = document.createElement('p');
     name.className = 'name';
     name.textContent = card.name;
-    big.append(art, name);
+    big.append(pictureElement(card), name);
     slide.append(big);
     if (position === 0) {
       const hint = document.createElement('p');
@@ -165,7 +162,9 @@ async function download(url, body, button, busyLabel) {
   button.textContent = busyLabel;
   showDeckStatus('');
   try {
-    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => {
+      throw new Error("Loter-IA can't be reached right now. Check your internet connection and try again.");
+    });
     if (!response.ok) {
       const answer = await response.json().catch(() => ({}));
       throw new Error(answer.message || "Couldn't make the PDF. Try again.");
@@ -200,12 +199,7 @@ function cardElement(card, index) {
   item.className = 'card';
   item.dataset.index = index;
   item.style.setProperty('--card-color', COLORS[index % COLORS.length]);
-  const art = document.createElement('div');
-  art.className = 'art';
-  const image = document.createElement('img');
-  image.src = card.image;
-  image.alt = '';
-  art.append(image);
+  const art = pictureElement(card);
   const name = document.createElement('p');
   name.className = 'name';
   name.textContent = card.name;
@@ -219,6 +213,21 @@ function cardElement(card, index) {
   note.setAttribute('role', 'status');
   item.append(art, name, regen, note);
   return item;
+}
+
+// The colored picture area of a card. If the picture can't load, the area shows the card's name instead.
+function pictureElement(card) {
+  const art = document.createElement('div');
+  art.className = 'art';
+  const image = document.createElement('img');
+  image.alt = '';
+  image.addEventListener('error', () => {
+    art.classList.add('no-picture');
+    art.textContent = card.name;
+  });
+  image.src = card.image;
+  art.append(image);
+  return art;
 }
 
 function setNote(slot, message) {
@@ -238,14 +247,24 @@ function showPlaceholders(topic) {
   $('deck').hidden = false;
 }
 
+// Errors carry a message the teacher can read; canRetry says whether trying again could help
+// (a failed service or connection) or not (a topic that needs changing, the daily limit).
 async function post(url, body) {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw Object.assign(new Error("Loter-IA can't be reached right now. Check your internet connection and try again."), { canRetry: true });
+  }
   const answer = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(answer.message || 'Something went wrong while creating your Lotería.');
+  if (!response.ok) {
+    const message = answer.message || 'Something went wrong while creating your Lotería.';
+    throw Object.assign(new Error(message), { canRetry: response.status >= 500 });
+  }
   return answer;
 }
 
@@ -254,9 +273,10 @@ function setBusy(busy) {
   $('deck').setAttribute('aria-busy', String(busy));
 }
 
-function showStatus(message, isError = false) {
+function showStatus(message, isError = false, canRetry = false) {
   $('status').textContent = message;
   $('status').classList.toggle('error', isError);
+  $('retry').hidden = !canRetry;
 }
 
 function showDeckStatus(message, isError = false) {

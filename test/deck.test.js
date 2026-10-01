@@ -149,3 +149,16 @@ test('more cards never repeat a name or pictogram the page has already seen', as
   assert.deepEqual(cards.map(card => card.name), ['El Cometa', 'El Cohete']);
   assert.deepEqual(calls[0].avoid, ['El Sol', 'El Lucero']);
 });
+
+test('stops asking when the AI has no ideas at all for the topic', async () => {
+  const calls = [];
+  const propose = async request => {
+    calls.push(request);
+    return [];
+  };
+  await assert.rejects(
+    buildDeck({ topic: 'zzzz qqqq', language: 'English' }, { propose, find: fakeFind() }),
+    error => error instanceof DeckError && error.code === 'too-narrow',
+  );
+  assert.equal(calls.length, 1);
+});

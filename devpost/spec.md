@@ -175,11 +175,14 @@ loteria-bilingue/            # project folder (the public repo can be named lote
 ├── test/
 │   ├── boards.test.js       # 12 different cards per board, no two boards alike, shuffle
 │   ├── pdf.test.js          # page counts, pictures embedded once, missing picture
+│   ├── nova.test.js         # request shape, unsuitable topic, review verdicts (fake Bedrock)
+│   ├── limit.test.js        # daily limit and its reset
 │   ├── deck.test.js         # deck assembly with fake Nova and ARASAAC answers
 │   └── arasaac.test.js      # exact search first, keyword match, picture options, retry (fake fetch)
 ├── scripts/
 │   └── coverage.js          # Plan B check: real decks for six school topics (npm run coverage)
 ├── Dockerfile               # node:24-alpine image for the public link
+├── .dockerignore            # keeps secrets, tests, and planning files out of the image
 ├── .env.example             # AWS_BEARER_TOKEN_BEDROCK=, AWS_REGION=us-east-1, NOVA_MODEL_ID=, DAILY_DECKS=, DAILY_MORE=
 ├── .gitignore               # already ignores .env, learner profile, Spanish review pages
 ├── package-lock.json        # exact versions of PDFKit and what it needs
@@ -242,8 +245,10 @@ Cristian's fallback, decided at review. It is not built unless the coverage chec
 
 ## Important Failure Modes
 - **Not enough pictograms for the topic** → one extra request for ideas. If there are still fewer than 24, the page says: "This topic doesn't have enough pictures yet. Try a broader topic." (`prd.md > States and Boundaries`)
+- **Nonsense or unsuitable topic** → Nova marks it (`suitable: false` in its answer) and the page says: "Loter-IA can't make a Lotería for this topic. Try a different one." *(Added in the build.)*
 - **Ambiguous words** (cometa means both comet and kite) → searches use Nova's specific English words and try the exact match first.
 - **Amazon AI fails or takes over 30 seconds** → the page says: "Something went wrong while creating your Lotería." A "Try again" button keeps the topic.
+- **The server can't be reached** → the page says: "Loter-IA can't be reached right now. Check your internet connection and try again.", with the same "Try again" button.
 - **ARASAAC is down or slow** → the same message and retry. A picture that fails to load shows its name on the colored background.
 - **Daily limit reached on the public link** → the page says: "Loter-IA has reached today's limit. Please try again tomorrow."
 

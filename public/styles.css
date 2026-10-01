@@ -113,7 +113,11 @@ button {
 .primary:disabled { opacity: .6; cursor: progress; }
 button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
-.status { min-height: 24px; margin: 14px 0 0; font-weight: 600; color: var(--muted); }
+.status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 14px; }
+.status { min-height: 24px; margin: 0; font-weight: 600; color: var(--muted); }
+.retry { min-height: 40px; font-size: 16px; }
+.retry[hidden] { display: none; }
+#deck-status { margin-top: 10px; }
 .status.error { color: var(--red); }
 
 /* Deck */
@@ -182,6 +186,15 @@ button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
   overflow: hidden;
 }
 .art img { width: 80%; height: auto; }
+.art.no-picture {
+  padding: 10px;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 20px;
+  text-transform: uppercase;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
 
 .name {
   margin: 0;
