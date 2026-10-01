@@ -20,7 +20,7 @@ const ids = options => options.map(option => option.pictogramId);
 
 test('uses the exact-match search first', async () => {
   const { fetch, asked } = fakeFetch({ 'bestsearch/comet': [pictogram(2711, 'comet')] });
-  assert.deepEqual(await findPictograms(['comet'], { fetch }), [{ pictogramId: 2711, image: imageUrl(2711), term: 'comet', about: 'comet', shelves: [] }]);
+  assert.deepEqual(await findPictograms(['comet'], { fetch }), [{ pictogramId: 2711, image: imageUrl(2711), term: 'comet', keyword: 'comet', about: 'comet', shelves: [] }]);
   assert.deepEqual(asked, ['bestsearch/comet']);
 });
 
@@ -32,7 +32,7 @@ test('browses a shelf of the library: its pictures, titled with their first keyw
   const nameless = { _id: 9004, keywords: [], categories: ['astronomy'] };
   const { fetch, asked } = fakeFetch({ 'search/astronomy': [comet, classroom, phrase, scary, nameless] });
   assert.deepEqual(await browsePictograms('astronomy', { fetch }), [
-    { pictogramId: 2711, image: imageUrl(2711), term: 'comet', about: 'comet — (astronomy)', shelves: ['astronomy'] },
+    { pictogramId: 2711, image: imageUrl(2711), term: 'comet', keyword: 'comet', about: 'comet — (astronomy)', shelves: ['astronomy'] },
   ]);
   assert.deepEqual(asked, ['search/astronomy']);
   assert.deepEqual(await browsePictograms('nothing here', { fetch }), []);

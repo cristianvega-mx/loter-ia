@@ -92,7 +92,9 @@ PRD ref: `prd.md > Creating the Lotería`, `prd.md > Regenerating a Card`, `prd.
 - one to three simple English search words (singular nouns first);
 - nothing from the exclude list, and simple everyday things when it is told that some ideas had no picture.
 
-It returns `[{name, search}]`.
+It returns `[{name, search}]`. Nova sometimes lists far more concepts than asked: the list is trimmed to a quarter over the count, and an answer that was cut off at the length limit is asked for once more.
+
+English titles go through `lib/titles.js`, because Nova is not consistent with them: "A Comet" becomes "The Comet", the planets lose any article, and a bare title gets "The" when the picture library writes that word as a common noun (it writes "comet" in lower case and "Halloween" with a capital).
 
 `reviewCards` (same file) is the second look: through the forced tool `review_cards` it returns, for each candidate, whether to keep it, which picture option fits the topic, and the corrected name. *(Added in the build.)*
 PRD ref: `prd.md > Creating the Lotería`.
@@ -162,9 +164,10 @@ All shapes are plain JavaScript objects.
 loteria-bilingue/            # project folder (the public repo can be named loter-ia)
 ├── server.js                # small web server: serves public/, answers /api/deck, /api/more, and the two PDF routes
 ├── lib/
-│   ├── nova.js              # asks Amazon Nova for concepts (Converse API, forced tool)
-│   ├── arasaac.js           # finds a pictogram for an English search word
-│   ├── deck.js              # candidates → 24 cards + spares, retry once, "topic too narrow"
+│   ├── nova.js              # asks Amazon Nova for concepts and reviews the cards (Converse API, forced tools)
+│   ├── arasaac.js           # finds a pictogram for an English search word; lists a category of the library
+│   ├── deck.js              # candidates → 24 cards + spares, fills in from the library, "topic too narrow"
+│   ├── titles.js            # small rules that keep English titles consistent ("The Comet", "Mars")
 │   ├── boards.js            # shuffle and makeBoards (pure functions)
 │   ├── pdf.js               # boards and cards as PDF files (PDFKit)
 │   └── limit.js             # daily counters for the public link
@@ -179,6 +182,7 @@ loteria-bilingue/            # project folder (the public repo can be named lote
 │   ├── nova.test.js         # request shape, unsuitable topic, review verdicts (fake Bedrock)
 │   ├── limit.test.js        # daily limit and its reset
 │   ├── deck.test.js         # deck assembly with fake Nova and ARASAAC answers
+│   ├── titles.test.js       # English titles: articles and planet names
 │   └── arasaac.test.js      # exact search first, keyword match, picture options, retry (fake fetch)
 ├── scripts/
 │   └── coverage.js          # Plan B check: real decks for six school topics (npm run coverage)

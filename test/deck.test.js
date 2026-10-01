@@ -89,10 +89,10 @@ test('fills in from the picture library\'s own shelves before asking the AI agai
 
   // In English a common noun from the library gets "The" even when the review left it bare; a proper name doesn't.
   const englishBrowse = async () => [
-    { pictogramId: 200, image: 'x.png', term: 'planet', about: '', shelves: ['astronomy'] },
-    { pictogramId: 201, image: 'x.png', term: 'Mars', about: '', shelves: ['astronomy'] },
-    { pictogramId: 202, image: 'x.png', term: 'full moon', about: '', shelves: ['astronomy'] },
-    { pictogramId: 203, image: 'x.png', term: 'comet', about: '', shelves: ['astronomy'] },
+    { pictogramId: 200, image: 'x.png', term: 'planet', keyword: 'planet', about: '', shelves: ['astronomy'] },
+    { pictogramId: 201, image: 'x.png', term: 'Mars', keyword: 'Mars', about: '', shelves: ['astronomy'] },
+    { pictogramId: 202, image: 'x.png', term: 'full moon', keyword: 'full moon', about: '', shelves: ['astronomy'] },
+    { pictogramId: 203, image: 'x.png', term: 'comet', keyword: 'comet', about: '', shelves: ['astronomy'] },
   ];
   const titles = { planet: 'Planet', Mars: 'Mars', 'full moon': 'The Full Moon', comet: 'Comet' };
   const englishReview = async ({ candidates }) => candidates.map(candidate => ({ keep: true, name: titles[candidate.name] ?? candidate.name, picture: 1 }));

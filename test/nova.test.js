@@ -27,6 +27,26 @@ test('asks Nova through a forced tool, with the key as a bearer token', async ()
   assert.match(body.messages[0].content[0].text, /Topic: the solar system\nCard language: Spanish \(write every name in Spanish\)\nHow many: 36\nAvoid: Marte/);
 });
 
+test('an answer that ran long is trimmed, and one that was cut off is asked for again', async () => {
+  const many = Array.from({ length: 200 }, (_, i) => ({ name: `Thing ${i}`, search: [`thing${i}`] }));
+  const long = fakeBedrock({ suitable: true, concepts: many });
+  assert.equal((await proposeConcepts({ topic: 'holidays', language: 'Spanish', count: 48 }, { fetch: long.fetch, env })).length, 60);
+
+  let asked = 0;
+  const cutThenWhole = async () => {
+    asked++;
+    const body = asked === 1
+      ? { stopReason: 'max_tokens', output: { message: { content: [] } } }
+      : { stopReason: 'tool_use', output: { message: { content: [{ toolUse: { name: 'tool', input: { suitable: true, concepts: many.slice(0, 3) } } }] } } };
+    return new Response(JSON.stringify(body), { status: 200 });
+  };
+  assert.equal((await proposeConcepts({ topic: 'holidays', language: 'Spanish', count: 48 }, { fetch: cutThenWhole, env })).length, 3);
+  assert.equal(asked, 2);
+
+  const alwaysCut = async () => new Response(JSON.stringify({ stopReason: 'max_tokens', output: { message: { content: [] } } }), { status: 200 });
+  await assert.rejects(proposeConcepts({ topic: 'holidays', language: 'Spanish', count: 48 }, { fetch: alwaysCut, env }), /cut short/);
+});
+
 test('a later round tells Nova which ideas had no picture', async () => {
   const { fetch, requests } = fakeBedrock({ suitable: true, concepts: [] });
   await proposeConcepts({ topic: 'space', language: 'English', count: 24, avoid: ['The Sun', 'The Quasar'], unpictured: ['The Quasar'] }, { fetch, env });
